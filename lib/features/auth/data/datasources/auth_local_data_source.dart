@@ -1,4 +1,4 @@
-import 'package:cheza_app/widgets/local_party_storage.dart';
+import 'package:cheza_app/core/storage/local_party_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthLocalDataSource {
