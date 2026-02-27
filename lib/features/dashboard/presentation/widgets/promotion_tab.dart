@@ -193,7 +193,7 @@ class _PromotionPageState extends State<PromotionPage> {
               if (promoData == null) return;
 
               await SupabaseServicePromotion.deletePromotion(promoData['id']);
-
+              if (!mounted || !context.mounted) return;
               Navigator.pop(context);
               _loadPromotions();
             },
@@ -446,7 +446,7 @@ class _PromotionPageState extends State<PromotionPage> {
                               ) ??
                               0,
                         );
-
+                        if (!mounted || !context.mounted) return;
                         Navigator.pop(context);
                         _loadPromotions(); // 🔄 refresh UI
                       },
@@ -553,7 +553,7 @@ class _PromotionPageState extends State<PromotionPage> {
                         firstDate: DateTime.now(),
                         lastDate: DateTime(2100),
                       );
-
+                      if (!mounted || !context.mounted) return;
                       if (picked != null) {
                         expireDate = picked;
                         setLocalState(() {});
@@ -601,7 +601,7 @@ class _PromotionPageState extends State<PromotionPage> {
                                   0,
                               expireDate: expireDate!,
                             );
-
+                        if (!mounted || !context.mounted) return;
                         if (!success) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

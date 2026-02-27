@@ -73,6 +73,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery);
+    if (!mounted) return;
     if (image == null) return;
     final user = Supabase.instance.client.auth.currentUser;
     bool processing = false;
@@ -136,7 +137,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                               throw Exception("Sauvegarde échouée");
                             }
 
-                            if (!mounted) return;
+                            if (!mounted || !context.mounted) return;
 
                             // MAJ UI
                             setState(() {
@@ -148,7 +149,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                           } catch (e) {
                             debugPrint("❌ _pickAdminImage error: $e");
 
-                            if (mounted) {
+                            if (mounted && context.mounted) {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -179,6 +180,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       source: ImageSource.gallery,
       imageQuality: 70,
     );
+    if (!mounted) return;
     if (image == null) return;
 
     bool processing = false;
@@ -246,7 +248,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                               throw Exception("Sauvegarde échouée");
                             }
 
-                            if (!mounted) return;
+                            if (!mounted || !context.mounted) return;
 
                             // 3️⃣ MAJ UI LOCALE
                             setState(() {
@@ -261,7 +263,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                           } catch (e) {
                             debugPrint("❌ _pickPlaceImage error: $e");
 
-                            if (mounted) {
+                            if (mounted && context.mounted) {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -348,7 +350,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                           gender: gender,
                           imageUrl: _tempAdminImage,
                         );
-
+                        if (!mounted || !context.mounted) return;
                         _tempAdminImage = null;
                         Navigator.pop(context);
                         _loadData();
@@ -499,7 +501,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                             confPassCtrl.text.trim(),
                           );
                         }
-
+                        if (!mounted || !context.mounted) return;
                         Navigator.pop(context);
                       },
                 child: saving
@@ -612,7 +614,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                             throw Exception("Échec de la mise à jour");
                           }
 
-                          if (!mounted) return;
+                          if (!mounted || !context.mounted) return;
 
                           // ✅ MAJ LOCALE IMMÉDIATE
                           setState(() {
@@ -634,6 +636,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                           Navigator.pop(context);
                         } catch (e) {
                           debugPrint("❌ update place error: $e");
+                          if (!mounted || !context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
@@ -702,7 +705,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                                     imageQuality: 70,
                                     maxWidth: 800,
                                   );
-
+                                  if (!mounted || !context.mounted) return;
                                   if (image == null) return;
 
                                   setLocal(() => uploadingImage = true);
@@ -714,13 +717,13 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                                         fileName:
                                             'admin_${DateTime.now().millisecondsSinceEpoch}.jpg',
                                       );
-
+ if (!mounted || !context.mounted) return;
                                   if (url != null && url.startsWith('http')) {
                                     setLocal(() => avatarUrl = url);
                                   }
                                 } catch (e) {
                                   debugPrint("❌ Image upload error: $e");
-
+ if (!mounted || !context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
@@ -729,6 +732,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                                     ),
                                   );
                                 } finally {
+                                  
                                   setLocal(() => uploadingImage = false);
                                 }
                               },
@@ -929,7 +933,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                               await SupabaseServiceAdmin.getCountryIdByName(
                                 selectedCountry!,
                               );
-
+ if (!mounted || !context.mounted) return;
                           if (countryId == null) {
                             setLocal(() => saving = false);
                             return;
@@ -960,11 +964,12 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                             if (res.status != 200) {
                               throw Exception(res.data);
                             }
-
+ if (!mounted || !context.mounted) return;
                             Navigator.pop(context);
                             _loadData(); // RESTE SUR SETTINGS + refresh liste
                           } catch (e) {
                             debugPrint("❌ create-admin error: $e");
+                             if (!mounted || !context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
@@ -973,6 +978,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                               ),
                             );
                           } finally {
+                            
                             setLocal(() => saving = false);
                           }
                         },

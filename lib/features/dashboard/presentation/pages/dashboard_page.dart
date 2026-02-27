@@ -106,6 +106,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
+    if (!mounted) return null;
     if (date == null) return null;
 
     final time = await showTimePicker(
@@ -203,9 +204,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     // 🔒 Ne jamais refresh sans internet
     if (!NetworkService.isConnected) return;
 
-    final count = await ref.read(dashboardRepositoryProvider).loadDashboardStats(
-      _currentPartyId!,
-    );
+    final count = await ref
+        .read(dashboardRepositoryProvider)
+        .loadDashboardStats(_currentPartyId!);
 
     if (!mounted) return;
 
@@ -249,14 +250,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       ref.read(activePartyIdProvider.notifier).state = partyId;
 
       final stats = await ref.read(loadDashboardStatsUseCaseProvider)(partyId);
-
+      if (!mounted) return;
       ref.read(dashboardStatsProvider.notifier).state = stats;
+      final clientele = await ref
+          .read(dashboardRepositoryProvider)
+          .fetchClientele(partyId);
 
-      ref
-          .read(clienteleProvider.notifier)
-          .setClients(
-            await ref.read(dashboardRepositoryProvider).fetchClientele(partyId),
-          );
+      if (!mounted) return;
+
+      ref.read(clienteleProvider.notifier).setClients(clientele);
 
       // ======================
       // UI LOCALE
@@ -293,9 +295,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       _realtimeController.startAttendanceRealtime(
         partyId: partyId, // partyId est NON NULL ici
         reloadClientele: () async {
-          final data = await ref.read(dashboardRepositoryProvider).fetchClientele(
-            partyId,
-          );
+          final data = await ref
+              .read(dashboardRepositoryProvider)
+              .fetchClientele(partyId);
 
           ref.read(clienteleProvider.notifier).setClients(data);
         },
@@ -314,9 +316,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       _realtimeController.startFallbackResync(
         partyId: partyId,
         reloadClientele: () async {
-          final data = await ref.read(dashboardRepositoryProvider).fetchClientele(
-            partyId,
-          );
+          final data = await ref
+              .read(dashboardRepositoryProvider)
+              .fetchClientele(partyId);
 
           ref.read(clienteleProvider.notifier).setClients(data);
         },
@@ -408,9 +410,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                         partyId: activePartyId!,
                                         closedAt: tempCloseTime!,
                                       );
+                                      if (!mounted || !context.mounted) return;
                                       await LocalPartyStorage.setPartyOpen(
                                         false,
                                       );
+                                      if (!mounted || !context.mounted) return;
                                       setState(() {
                                         isOpen = false;
                                         activePartyId = null;
@@ -591,13 +595,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
                                       // ✅ CRÉATION DE LA FÊTE
                                       final partyId =
-                                          await ref.read(createPartyUseCaseProvider)(
+                                          await ref.read(
+                                            createPartyUseCaseProvider,
+                                          )(
                                             placeId: placeId!,
                                             name: tempPartyName,
                                             openedAt: tempOpenTime!,
                                             closedAt: tempCloseTime!,
                                           );
-
+                                      if (!mounted || !context.mounted) return;
                                       if (partyId == null) {
                                         ScaffoldMessenger.of(
                                           context,
@@ -613,6 +619,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                       await LocalPartyStorage.setPartyOpen(
                                         true,
                                       );
+                                       if (!mounted || !context.mounted) return;
                                       // ✅ MISE À JOUR UI
                                       setState(() {
                                         isOpen = true;
@@ -1089,11 +1096,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         return const Text("Membres");
 
       case 3:
-  return PromotionPage(
-    placeId: placeId,
-    activePartyId: activePartyId,
-    placeName: placeName,
-  );
+        return PromotionPage(
+          placeId: placeId,
+          activePartyId: activePartyId,
+          placeName: placeName,
+        );
 
       case 4:
         return const MenuTab();

@@ -140,7 +140,7 @@ class _MenuTabState extends State<MenuTab> {
                                         : await SupabaseServiceMenu.insertMenu(
                                             name: controller.text.trim(),
                                           );
-
+                                    if (!mounted || !context.mounted) return;
                                     if (!success) {
                                       setLocalState(() => saving = false);
                                       ScaffoldMessenger.of(
@@ -248,6 +248,7 @@ class _MenuTabState extends State<MenuTab> {
                                     await SupabaseServiceMenu.deleteMenu(
                                       menuId,
                                     );
+                                    if (!mounted || !context.mounted) return;
                                     Navigator.pop(context);
                                     await loadMenus();
                                   },
@@ -446,7 +447,7 @@ class _MenuTabState extends State<MenuTab> {
                                           price: price,
                                         );
 
-                                    if (!mounted) return;
+                                     if (!mounted || !context.mounted) return;
 
                                     Navigator.pop(context);
 
@@ -673,7 +674,7 @@ class _MenuTabState extends State<MenuTab> {
                             price: price,
                           );
 
-                          if (!mounted) return;
+                           if (!mounted || !context.mounted) return;
 
                           Navigator.pop(context);
 
@@ -727,7 +728,7 @@ class _MenuTabState extends State<MenuTab> {
                             itemId,
                           );
 
-                          if (!mounted) return;
+                           if (!mounted || !context.mounted) return;
 
                           Navigator.pop(context);
 
