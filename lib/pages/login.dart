@@ -692,6 +692,7 @@ class _LoginAdminPageState extends State<LoginAdminPage>
                                       ),
                                     );
                                   } catch (e) {
+                                    if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
