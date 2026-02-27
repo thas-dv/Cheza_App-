@@ -6,9 +6,19 @@ class AuthLocalDataSource {
 
   final SupabaseClient _client;
 
-  bool hasActiveSession() => _client.auth.currentSession != null;
+  bool hasActiveSession() {
+    try {
+      return _client.auth.currentSession != null;
+    } catch (_) {
+      return false;
+    }
+  }
 
-  Future<bool> hasOpenPartyOfflineAccess() {
-    return LocalPartyStorage.isPartyOpen();
+  Future<bool> hasOpenPartyOfflineAccess() async {
+    try {
+      return await LocalPartyStorage.isPartyOpen();
+    } catch (_) {
+      return false;
+    }
   }
 }
