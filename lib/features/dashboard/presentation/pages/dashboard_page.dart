@@ -13,7 +13,6 @@ import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/parties_t
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/settings_tab.dart';
 import 'package:cheza_app/providers/party_providers.dart'
     hide dashboardStatsProvider, DashboardStats;
-import 'package:cheza_app/features/promotions/presentation/pages/promotions_page.dart';
 import 'package:cheza_app/core/storage/local_party_storage.dart';
 import 'package:marquee/marquee.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';

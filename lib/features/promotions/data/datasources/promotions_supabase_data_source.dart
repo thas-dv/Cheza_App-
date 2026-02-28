@@ -55,58 +55,65 @@ class PromotionsSupabaseDataSource {
   }
 
   Future<List<Map<String, dynamic>>> loadPromos({required int partyId}) async {
- 
-
-    final promos = await _client
+    final response = await _client
         .from('promos')
-       
         .select('''
+        id,
+        promo_desc,
+        unlimited,
+        limite,
+        date_start,
+        date_end,
+        promo_party!inner(party_id),
+        items:promo_items (
           id,
-          promo_desc,
-          unlimited,
-          limite,
-          date_start,
-          date_end,
-          promo_party!inner(party_id),
-          promo_items (
+          promo_id,
+          menu_item_id,
+          is_free,
+          discount_type,
+          discount_value,
+          menu_items (
             id,
-            promo_id,
-            menu_item_id,
-            is_free,
-            discount_type,
-            discount_value,
-            menu_items (
-              id,
-              item_name,
-              price
-            )
+            item_name,
+            price
           )
-        ''')
+        )
+      ''')
         .eq('promo_party.party_id', partyId)
         .order('date_start', ascending: false);
 
+    final promos = List<Map<String, dynamic>>.from(response);
 
+    return promos.map((promo) {
+      final rawItems = List<Map<String, dynamic>>.from(
+        promo['items'] ?? const [],
+      );
 
-    return [
-      for (final promo in List<Map<String, dynamic>>.from(promos))
-        {
-          ...promo
-            ..remove('promo_party')
-            ..remove('promo_items'),
-          'items': List<Map<String, dynamic>>.from(
-           List<Map<String, dynamic>>.from(promo['promo_items'] ?? []).map((item) {
-              final menu = (item['menu_items'] as Map<String, dynamic>?) ??
-                  const <String, dynamic>{};
+      final mappedItems = rawItems.map((item) {
+        final menu = (item['menu_items'] as Map<String, dynamic>?) ?? const {};
 
-              return {
-               ...item..remove('menu_items'),
-                'item_name': menu['item_name'],
-                'item_price': menu['price'],
-              };
-            }),
-          ),
-        },
-    ];
+        return {
+          'id': item['id'],
+          'promo_id': item['promo_id'],
+          'menu_item_id': item['menu_item_id'],
+          'is_free': item['is_free'],
+          'discount_type': item['discount_type'],
+          'discount_value': item['discount_value'],
+          'item_name': menu['item_name'],
+          'item_price': menu['price'],
+        };
+      }).toList();
+
+      return {
+        'id': promo['id'],
+        'promo_desc': promo['promo_desc'],
+        'unlimited': promo['unlimited'],
+        'limite': promo['limite'],
+        'date_start': promo['date_start'],
+        'date_end': promo['date_end'],
+        'items': mappedItems,
+      };
+    }).toList();
   }
 
   Future<List<Map<String, dynamic>>> loadMenuItems({
