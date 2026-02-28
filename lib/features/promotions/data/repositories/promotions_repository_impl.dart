@@ -3,6 +3,13 @@ import 'package:cheza_app/features/promotions/domain/entities/promotion_entity.d
 import 'package:cheza_app/features/promotions/domain/repositories/promotions_repository.dart';
 
 class PromotionsRepositoryImpl implements PromotionsRepository {
+   String? _normalizeDiscountType(String? type) {
+    return switch (type) {
+      'Pourcentage' => 'percentage',
+      'Montant' => 'amount',
+      _ => type,
+    };
+  }
   const PromotionsRepositoryImpl(this._dataSource);
 
   final PromotionsSupabaseDataSource _dataSource;
@@ -49,21 +56,21 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
     );
   }
 
-  @override
-  Future<List<MenuItemOptionEntity>> getMenuItemsByMenu({
-    required int menuId,
-  }) async {
-    final raw = await _dataSource.fetchMenuItemsByMenu(menuId: menuId);
-    return raw
-        .map(
-          (item) => MenuItemOptionEntity(
-            id: item['id'] as int,
-            name: item['item_name']?.toString() ?? 'Article',
-            price: (item['price'] as num?)?.toDouble() ?? 0,
-          ),
-        )
-        .toList();
-  }
+  // @override
+  // Future<List<MenuItemOptionEntity>> getMenuItemsByMenu({
+  //   required int menuId,
+  // }) async {
+  //   final raw = await _dataSource.fetchMenuItemsByMenu(menuId: menuId);
+  //   return raw
+  //       .map(
+  //         (item) => MenuItemOptionEntity(
+  //           id: item['id'] as int,
+  //           name: item['item_name']?.toString() ?? 'Article',
+  //           price: (item['price'] as num?)?.toDouble() ?? 0,
+  //         ),
+  //       )
+  //       .toList();
+  // }
 
   @override
   Future<List<PromotionEntity>> loadPromos({required int partyId}) async {
@@ -92,7 +99,8 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
                 itemName: item['item_name']?.toString() ?? 'Article',
                 itemPrice: (item['item_price'] as num?)?.toDouble() ?? 0,
                 isFreeOffer: item['is_free'] as bool? ?? true,
-                discountType: item['discount_type']?.toString(),
+                // discountType: item['discount_type']?.toString(),
+                 discountType: _normalizeDiscountType(item['discount_type']?.toString()),
                 discountValue: (item['discount_value'] as num?)?.toDouble(),
               ),
             )

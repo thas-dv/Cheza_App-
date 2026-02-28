@@ -7,6 +7,6 @@ class GetMenusByPlaceUseCase {
   final MenuRepository _repository;
 
   Future<List<MenuEntity>> call({required int placeId}) {
-    return _repository.getMenusByPlace(placeId: placeId);
+     return _repository.fetchMenusByPlace(placeId: placeId);
   }
 }

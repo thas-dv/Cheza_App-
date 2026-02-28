@@ -1,12 +1,11 @@
-import 'package:cheza_app/features/promotions/domain/entities/promotion_entity.dart';
-import 'package:cheza_app/features/promotions/domain/repositories/promotions_repository.dart';
-
+import 'package:cheza_app/features/menus/data/repositories/menu_repository.dart';
+import 'package:cheza_app/features/menus/domain/entities/menu_entity.dart';
 class LoadMenuItemsUseCase {
   const LoadMenuItemsUseCase(this._repository);
 
-  final PromotionsRepository _repository;
+ final MenuRepository _repository;
 
   Future<List<MenuItemOptionEntity>> call({required int menuId}) {
-    return _repository.getMenuItemsByMenu(menuId: menuId);
+      return _repository.fetchMenuItemsByMenu(menuId: menuId);
   }
 }

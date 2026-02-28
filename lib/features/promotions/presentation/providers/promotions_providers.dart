@@ -1,15 +1,22 @@
+import 'package:cheza_app/features/promotions/domain/usecases/dalete_promo_usecase.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cheza_app/features/promotions/data/datasources/promotions_supabase_data_source.dart';
 import 'package:cheza_app/features/promotions/data/repositories/promotions_repository_impl.dart';
 import 'package:cheza_app/features/promotions/domain/entities/promotion_entity.dart';
-
+// import 'package:cheza_app/features/menus/data/datasources/menus_supabase_data_source.dart';
+import 'package:cheza_app/features/menus/data/repositories/menu_repository.dart';
+// import 'package:cheza_app/features/menus/data/repositories/menu_repository_impl.dart';
+// import 'package:cheza_app/features/menus/domain/entities/menu_entity.dart';
+// import 'package:cheza_app/features/menus/domain/usecases/get_menus_by_place_usecase.dart';
 import 'package:cheza_app/features/promotions/domain/usecases/add_promo_item_usecase.dart';
 import 'package:cheza_app/features/promotions/domain/usecases/attach_promo_to_party_usecase.dart';
 import 'package:cheza_app/features/promotions/domain/usecases/create_promo_usecase.dart';
 import 'package:cheza_app/features/promotions/domain/usecases/get_menu_items_by_menu_usecase.dart';
 import 'package:cheza_app/features/promotions/domain/usecases/load_promos_usecase.dart';
-
+import 'package:cheza_app/features/promotions/domain/usecases/update_promo_usecase.dart';
+// import 'package:cheza_app/features/promotions/domain/usecases/delete_promo_usecase.dart';
+import 'package:cheza_app/features/promotions/domain/repositories/promotions_repository.dart';
 import 'package:cheza_app/features/menus/data/datasources/menus_supabase_data_source.dart';
 import 'package:cheza_app/features/menus/data/repositories/menu_repository_impl.dart';
 import 'package:cheza_app/features/menus/domain/entities/menu_entity.dart';
@@ -20,23 +27,21 @@ import 'package:flutter_riverpod/legacy.dart';
 final promotionsRefreshTickProvider = StateProvider<int>((ref) => 0);
 
 /// 🔥 DataSources
-final promotionsDataSourceProvider =
-    Provider((ref) => PromotionsSupabaseDataSource());
-
-final menusDataSourceProvider =
-    Provider((ref) => MenusSupabaseDataSource());
-
-/// 🔥 Repositories
-final promotionsRepositoryProvider = Provider(
-  (ref) => PromotionsRepositoryImpl(
-    ref.read(promotionsDataSourceProvider),
-  ),
+final promotionsDataSourceProvider = Provider<PromotionsSupabaseDataSource>(
+  (ref) => PromotionsSupabaseDataSource(),
 );
 
-final menuRepositoryProvider = Provider(
-  (ref) => MenuRepositoryImpl(
-    ref.read(menusDataSourceProvider),
-  ),
+final menusDataSourceProvider = Provider<MenusSupabaseDataSource>(
+  (ref) => MenusSupabaseDataSource(),
+);
+
+/// 🔥 Repositories
+final promotionsRepositoryProvider = Provider<PromotionsRepository>(
+  (ref) => PromotionsRepositoryImpl(ref.read(promotionsDataSourceProvider)),
+);
+
+final menuRepositoryProvider = Provider<MenuRepository>(
+  (ref) => MenuRepositoryImpl(ref.read(menusDataSourceProvider)),
 );
 
 /// 🔥 UseCases
@@ -51,7 +56,13 @@ final addPromoItemUseCaseProvider = Provider(
 final attachPromoToPartyUseCaseProvider = Provider(
   (ref) => AttachPromoToPartyUseCase(ref.read(promotionsRepositoryProvider)),
 );
+final updatePromoUseCaseProvider = Provider(
+  (ref) => UpdatePromoUseCase(ref.read(promotionsRepositoryProvider)),
+);
 
+final deletePromoUseCaseProvider = Provider(
+  (ref) => DeletePromoUseCase(ref.read(promotionsRepositoryProvider)),
+);
 final loadPromosUseCaseProvider = Provider(
   (ref) => LoadPromosUseCase(ref.read(promotionsRepositoryProvider)),
 );
@@ -61,31 +72,49 @@ final getMenusByPlaceUseCaseProvider = Provider(
 );
 
 final getMenuItemsByMenuUseCaseProvider = Provider(
-  (ref) => GetMenuItemsByMenuUseCase(ref.read(promotionsRepositoryProvider)),
+  (ref) => GetMenuItemsByMenuUseCase(ref.read(menuRepositoryProvider)),
 );
 
 /// 🔥 Providers
 
 final promotionsByPartyProvider =
     FutureProvider.family<List<PromotionEntity>, int>((ref, partyId) async {
-  ref.watch(promotionsRefreshTickProvider);
-  return ref.read(loadPromosUseCaseProvider)(partyId: partyId);
-});
+      ref.watch(promotionsRefreshTickProvider);
+      return ref.read(loadPromosUseCaseProvider)(partyId: partyId);
+    });
 
-final menusByPlaceProvider =
-    FutureProvider.family<List<MenuEntity>, int>((ref, placeId) async {
+final menusByPlaceProvider = FutureProvider.family<List<MenuEntity>, int>((
+  ref,
+  placeId,
+) async {
   return ref.read(getMenusByPlaceUseCaseProvider)(placeId: placeId);
 });
 
+// final menuItemsByMenuProvider =
+//     FutureProvider.family<List<MenuItemOptionEntity>, int>((ref, menuId) async {
+//       return ref.read(getMenuItemsByMenuUseCaseProvider)(menuId: menuId);
+//     });
 final menuItemsByMenuProvider =
     FutureProvider.family<List<MenuItemOptionEntity>, int>((ref, menuId) async {
-  return ref.read(getMenuItemsByMenuUseCaseProvider)(menuId: menuId);
-});
+      try {
+        final useCase = ref.read(getMenuItemsByMenuUseCaseProvider);
 
-class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
-  PromotionsActionNotifier(this._ref) : super(const AsyncData(null));
+        final result = await useCase(menuId: menuId);
 
-  final Ref _ref;
+        return result;
+      } catch (e, stack) {
+        // 🔥 Log utile pour debug
+        print('Erreur menuItemsByMenuProvider: $e');
+        print("stackTrace: $stack");
+
+        // Important : rethrow pour que Riverpod passe en error
+        throw Exception('Impossible de charger les articles du menu');
+      }
+    });
+
+class PromotionsActionNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
 
   Future<int> createAndAttachPromo({
     required String description,
@@ -97,7 +126,7 @@ class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
     try {
-      final promoId = await _ref.read(createPromoUseCaseProvider)(
+      final promoId = await ref.read(createPromoUseCaseProvider)(
         description: description,
         unlimited: unlimited,
         limit: limit,
@@ -105,16 +134,16 @@ class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
         dateEnd: dateEnd,
       );
 
-      await _ref.read(attachPromoToPartyUseCaseProvider)(
+      await ref.read(attachPromoToPartyUseCaseProvider)(
         promoId: promoId,
         partyId: partyId,
       );
 
-      _ref.read(promotionsRefreshTickProvider.notifier).state++;
+      ref.read(promotionsRefreshTickProvider.notifier).state++;
       state = const AsyncData(null);
       return promoId;
-    } catch (error, stack) {
-      state = AsyncError(error, stack);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
       rethrow;
     }
   }
@@ -127,8 +156,8 @@ class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
     double? discountValue,
   }) async {
     state = const AsyncLoading();
-    try {
-      await _ref.read(addPromoItemUseCaseProvider)(
+    state = await AsyncValue.guard(() async {
+      await ref.read(addPromoItemUseCaseProvider)(
         promoId: promoId,
         itemId: itemId,
         isFreeOffer: isFreeOffer,
@@ -136,12 +165,8 @@ class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
         discountValue: discountValue,
       );
 
-      _ref.read(promotionsRefreshTickProvider.notifier).state++;
-      state = const AsyncData(null);
-    } catch (error, stack) {
-      state = AsyncError(error, stack);
-      rethrow;
-    }
+      ref.read(promotionsRefreshTickProvider.notifier).state++;
+    });
   }
 
   Future<void> updatePromo({
@@ -153,42 +178,29 @@ class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
     required DateTime dateEnd,
   }) async {
     state = const AsyncLoading();
-    try {
-      await _ref
-          .read(promotionsRepositoryProvider)
-          .updatePromo(
-            promoId: promoId,
-            description: description,
-            unlimited: unlimited,
-            limit: limit,
-            dateStart: dateStart,
-            dateEnd: dateEnd,
-          );
-
-      _ref.read(promotionsRefreshTickProvider.notifier).state++;
-      state = const AsyncData(null);
-    } catch (error, stack) {
-      state = AsyncError(error, stack);
-      rethrow;
-    }
+    state = await AsyncValue.guard(() async {
+      await ref.read(updatePromoUseCaseProvider)(
+        promoId: promoId,
+        description: description,
+        unlimited: unlimited,
+        limit: limit,
+        dateStart: dateStart,
+        dateEnd: dateEnd,
+      );
+      ref.read(promotionsRefreshTickProvider.notifier).state++;
+    });
   }
 
   Future<void> deletePromo({required int promoId}) async {
     state = const AsyncLoading();
-    try {
-      await _ref
-          .read(promotionsRepositoryProvider)
-          .deletePromo(promoId: promoId);
-      _ref.read(promotionsRefreshTickProvider.notifier).state++;
-      state = const AsyncData(null);
-    } catch (error, stack) {
-      state = AsyncError(error, stack);
-      rethrow;
-    }
+    state = await AsyncValue.guard(() async {
+      await ref.read(deletePromoUseCaseProvider)(promoId: promoId);
+      ref.read(promotionsRefreshTickProvider.notifier).state++;
+    });
   }
 }
 
 final promotionsActionProvider =
-    StateNotifierProvider<PromotionsActionNotifier, AsyncValue<void>>(
-      (ref) => PromotionsActionNotifier(ref),
+    AsyncNotifierProvider<PromotionsActionNotifier, void>(
+      PromotionsActionNotifier.new,
     );

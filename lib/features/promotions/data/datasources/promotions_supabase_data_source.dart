@@ -35,11 +35,16 @@ class PromotionsSupabaseDataSource {
     String? discountType,
     double? discountValue,
   }) async {
+    final normalizedType = switch (discountType) {
+      'Pourcentage' => 'percentage',
+      'Montant' => 'amount',
+      _ => discountType,
+    };
     await _client.from('promo_items').insert({
       'promo_id': promoId,
       'menu_item_id': itemId,
       'is_free': isFreeOffer,
-      'discount_type': isFreeOffer ? null : discountType,
+      'discount_type': isFreeOffer ? null : normalizedType,
       'discount_value': isFreeOffer ? null : discountValue,
     });
   }
@@ -142,15 +147,15 @@ class PromotionsSupabaseDataSource {
     await _client.from('promos').delete().eq('id', promoId);
   }
 
-  Future<List<Map<String, dynamic>>> fetchMenuItemsByMenu({
-    required int menuId,
-  }) async {
-    final items = await _client
-        .from('menu_items')
-        .select('id,item_name,price,menu_id')
-        .eq('menu_id', menuId)
-        .order('item_name', ascending: true);
+  // Future<List<Map<String, dynamic>>> fetchMenuItemsByMenu({
+  //   required int menuId,
+  // }) async {
+  //   final items = await _client
+  //       .from('menu_items')
+  //       .select('id,item_name,price,menu_id')
+  //       .eq('menu_id', menuId)
+  //       .order('item_name', ascending: true);
 
-    return List<Map<String, dynamic>>.from(items);
-  }
+  //   return List<Map<String, dynamic>>.from(items);
+  // }
 }

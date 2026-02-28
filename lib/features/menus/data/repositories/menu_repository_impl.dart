@@ -8,15 +8,33 @@ class MenuRepositoryImpl implements MenuRepository {
   final MenusSupabaseDataSource _dataSource;
 
   @override
-  Future<List<MenuEntity>> getMenusByPlace({required int placeId}) async {
+  Future<List<MenuEntity>> fetchMenusByPlace({required int placeId}) async {
     final rawMenus = await _dataSource.fetchMenusByPlace(placeId: placeId);
 
     return rawMenus
         .map(
           (menu) => MenuEntity(
             id: menu['id'] as int,
-            name: menu['menu_name']?.toString() ?? 'Menu',
+            name: menu['name']?.toString() ?? 'Menu',
             placeId: menu['place_id'] as int? ?? placeId,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<MenuItemOptionEntity>> fetchMenuItemsByMenu({
+    required int menuId,
+  }) async {
+    final rawItems = await _dataSource.fetchMenuItemsByMenu(menuId: menuId);
+
+    return rawItems
+        .map(
+          (item) => MenuItemOptionEntity(
+            id: item['id'] as int,
+            name: item['item_name']?.toString() ?? 'Article',
+            price: (item['price'] as num?)?.toDouble() ?? 0,
+            menuId: item['menu_id'] as int? ?? menuId,
           ),
         )
         .toList();
