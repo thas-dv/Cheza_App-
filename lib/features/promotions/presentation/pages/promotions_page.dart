@@ -1,6 +1,8 @@
 import 'package:cheza_app/features/promotions/domain/entities/promotion_entity.dart';
 import 'package:cheza_app/features/promotions/presentation/providers/promotions_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:cheza_app/themes/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PromotionsPage extends ConsumerWidget {
@@ -26,13 +28,18 @@ class PromotionsPage extends ConsumerWidget {
       );
     }
 
-    final promotionsAsync = ref.watch(promotionsByPartyProvider(activePartyId!));
+    final promotionsAsync = ref.watch(
+      promotionsByPartyProvider(activePartyId!),
+    );
     final actionState = ref.watch(promotionsActionProvider);
 
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.asset('assets/images/fondprincipal.png', fit: BoxFit.cover),
+          child: Image.asset(
+            'assets/images/fondprincipal.png',
+            fit: BoxFit.cover,
+          ),
         ),
         Positioned.fill(
           child: Container(color: const Color(0xFF0B1120).withOpacity(0.85)),
@@ -81,16 +88,14 @@ class PromotionsPage extends ConsumerWidget {
                         final promo = promotions[index];
                         return _PromotionCard(
                           promotion: promo,
-                          onAddItem: () => _openAddPromoItemDialog(
-                            context,
-                            ref,
-                            promo.id,
-                          ),
+                          onAddItem: () =>
+                              _openAddPromoItemDialog(context, ref, promo.id),
                         );
                       },
                     );
                   },
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (error, _) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -123,7 +128,10 @@ class PromotionsPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _openCreatePromoDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _openCreatePromoDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final formKey = GlobalKey<FormState>();
     final descCtrl = TextEditingController();
     final limitCtrl = TextEditingController();
@@ -167,7 +175,10 @@ class PromotionsPage extends ConsumerWidget {
 
             return AlertDialog(
               backgroundColor: const Color(0xFF1E1E1E),
-              title: const Text('Créer une promo', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Créer une promo',
+                style: TextStyle(color: Colors.white),
+              ),
               content: Form(
                 key: formKey,
                 child: Column(
@@ -175,8 +186,11 @@ class PromotionsPage extends ConsumerWidget {
                   children: [
                     TextFormField(
                       controller: descCtrl,
-                      decoration: const InputDecoration(labelText: 'Description'),
-                      validator: (value) => (value == null || value.trim().isEmpty)
+                      decoration: const InputDecoration(
+                        labelText: 'Description',
+                      ),
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
                           ? 'Description requise'
                           : null,
                     ),
@@ -227,7 +241,9 @@ class PromotionsPage extends ConsumerWidget {
                     if (!formKey.currentState!.validate()) return;
                     if (endDate.isBefore(startDate)) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('date_end doit être après date_start')),
+                        const SnackBar(
+                          content: Text('date_end doit être après date_start'),
+                        ),
                       );
                       return;
                     }
@@ -241,7 +257,9 @@ class PromotionsPage extends ConsumerWidget {
                           .createAndAttachPromo(
                             description: descCtrl.text.trim(),
                             unlimited: forEveryone,
-                            limit: forEveryone ? null : int.tryParse(limitCtrl.text),
+                            limit: forEveryone
+                                ? null
+                                : int.tryParse(limitCtrl.text),
                             dateStart: startDate,
                             dateEnd: endDate,
                             partyId: partyId,
@@ -300,7 +318,10 @@ class PromotionsPage extends ConsumerWidget {
           builder: (context, setStateDialog) {
             return AlertDialog(
               backgroundColor: const Color(0xFF1E1E1E),
-              title: const Text('Ajouter article', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Ajouter article',
+                style: TextStyle(color: Colors.white),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -310,12 +331,17 @@ class PromotionsPage extends ConsumerWidget {
                         .map(
                           (item) => DropdownMenuItem(
                             value: item,
-                            child: Text('${item.name} (${item.price.toStringAsFixed(2)})'),
+                            child: Text(
+                              '${item.name} (${item.price.toStringAsFixed(2)})',
+                            ),
                           ),
                         )
                         .toList(),
-                    onChanged: (value) => setStateDialog(() => selectedItem = value),
-                    decoration: const InputDecoration(labelText: 'Article du menu'),
+                    onChanged: (value) =>
+                        setStateDialog(() => selectedItem = value),
+                    decoration: const InputDecoration(
+                      labelText: 'Article du menu',
+                    ),
                   ),
                   CheckboxListTile(
                     value: isFreeOffer,
@@ -328,17 +354,30 @@ class PromotionsPage extends ConsumerWidget {
                     DropdownButtonFormField<String>(
                       value: discountType,
                       items: const [
-                        DropdownMenuItem(value: 'percentage', child: Text('Pourcentage')),
-                        DropdownMenuItem(value: 'amount', child: Text('Montant')),
+                        DropdownMenuItem(
+                          value: 'percentage',
+                          child: Text('Pourcentage'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'amount',
+                          child: Text('Montant'),
+                        ),
                       ],
-                      onChanged: (value) =>
-                          setStateDialog(() => discountType = value ?? 'percentage'),
-                      decoration: const InputDecoration(labelText: 'Type réduction'),
+                      onChanged: (value) => setStateDialog(
+                        () => discountType = value ?? 'percentage',
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Type réduction',
+                      ),
                     ),
                     TextField(
                       controller: valueCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(labelText: 'Valeur réduction'),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Valeur réduction',
+                      ),
                     ),
                   ],
                 ],
@@ -352,22 +391,29 @@ class PromotionsPage extends ConsumerWidget {
                   onPressed: () async {
                     final selected = selectedItem;
                     if (selected == null) return;
-                    final discountValue = double.tryParse(valueCtrl.text.replaceAll(',', '.'));
-                    if (!isFreeOffer && (discountValue == null || discountValue <= 0)) {
+                    final discountValue = double.tryParse(
+                      valueCtrl.text.replaceAll(',', '.'),
+                    );
+                    if (!isFreeOffer &&
+                        (discountValue == null || discountValue <= 0)) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Valeur réduction invalide.')),
+                        const SnackBar(
+                          content: Text('Valeur réduction invalide.'),
+                        ),
                       );
                       return;
                     }
 
                     try {
-                      await ref.read(promotionsActionProvider.notifier).addItemToPromo(
-                        promoId: promoId,
-                        itemId: selected.id,
-                        isFreeOffer: isFreeOffer,
-                        discountType: isFreeOffer ? null : discountType,
-                        discountValue: isFreeOffer ? null : discountValue,
-                      );
+                      await ref
+                          .read(promotionsActionProvider.notifier)
+                          .addItemToPromo(
+                            promoId: promoId,
+                            itemId: selected.id,
+                            isFreeOffer: isFreeOffer,
+                            discountType: isFreeOffer ? null : discountType,
+                            discountValue: isFreeOffer ? null : discountValue,
+                          );
                       if (!context.mounted) return;
                       Navigator.pop(dialogContext);
                     } catch (_) {}
@@ -389,13 +435,19 @@ class _PromotionCard extends StatelessWidget {
   final PromotionEntity promotion;
   final VoidCallback onAddItem;
 
+  String _formatGNF(double value) {
+    final formatter = NumberFormat('#,###', 'fr_FR');
+    return '${formatter.format(value)} GNF';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.deepIndigo.withOpacity(0.8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,7 +458,7 @@ class _PromotionCard extends StatelessWidget {
                 child: Text(
                   promotion.description,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -424,24 +476,71 @@ class _PromotionCard extends StatelessWidget {
             promotion.forEveryone
                 ? 'Pour tout le monde'
                 : 'Limite: ${promotion.limit ?? 0}',
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
           Text(
-            'Du ${promotion.dateStart.toLocal()} au ${promotion.dateEnd.toLocal()}',
-            style: const TextStyle(color: Colors.white70),
+            'Du ${DateFormat('dd/MM/yyyy').format(promotion.dateStart.toLocal())} au ${DateFormat('dd/MM/yyyy').format(promotion.dateEnd.toLocal())}',
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 8),
           if (promotion.items.isEmpty)
-            const Text('Aucun article lié.', style: TextStyle(color: Colors.grey))
+            const Text(
+              'Aucun article lié.',
+              style: TextStyle(color: Colors.grey),
+            )
           else
             ...promotion.items.map(
               (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  item.isFreeOffer
-                      ? '• ${item.itemName} gratuit'
-                      : '• ${item.itemName} - ${item.discountType} ${item.discountValue}',
-                  style: const TextStyle(color: Colors.white),
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.backgroundDark,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.local_offer_rounded,
+                        color: AppColors.neonPurple,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.itemName,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        item.isFreeOffer
+                            ? 'Gratuit'
+                            : item.discountType == 'percentage'
+                            ? '-${item.discountValue?.toStringAsFixed(0) ?? '0'}%'
+                            : '-${_formatGNF(item.discountValue ?? 0)}',
+                        style: const TextStyle(
+                          color: AppColors.neonBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        _formatGNF(item.itemPrice),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
