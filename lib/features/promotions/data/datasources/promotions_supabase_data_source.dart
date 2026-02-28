@@ -37,8 +37,8 @@ class PromotionsSupabaseDataSource {
   }) async {
     await _client.from('promo_items').insert({
       'promo_id': promoId,
-      'item_id': itemId,
-      'is_free_offer': isFreeOffer,
+      'menu_item_id': itemId,
+      'is_free': isFreeOffer,
       'discount_type': isFreeOffer ? null : discountType,
       'discount_value': isFreeOffer ? null : discountValue,
     });
@@ -55,56 +55,51 @@ class PromotionsSupabaseDataSource {
   }
 
   Future<List<Map<String, dynamic>>> loadPromos({required int partyId}) async {
-    final links = await _client
-        .from('promo_party')
-        .select('promo_id')
-        .eq('party_id', partyId);
-
-    final promoIds = List<int>.from(
-      links.map((link) => link['promo_id']).whereType<int>(),
-    );
-
-    if (promoIds.isEmpty) return [];
+ 
 
     final promos = await _client
         .from('promos')
-        .select('id,promo_desc,unlimited,limite,date_start,date_end')
-        .inFilter('id', promoIds)
+       
+        .select('''
+          id,
+          promo_desc,
+          unlimited,
+          limite,
+          date_start,
+          date_end,
+          promo_party!inner(party_id),
+          promo_items (
+            id,
+            promo_id,
+            menu_item_id,
+            is_free,
+            discount_type,
+            discount_value,
+            menu_items (
+              id,
+              item_name,
+              price
+            )
+          )
+        ''')
+        .eq('promo_party.party_id', partyId)
         .order('date_start', ascending: false);
 
-    final items = await _client
-        .from('promo_items')
-        .select(
-          'id,promo_id,menu_item_id,is_free_offer,discount_type,discount_value',
-        )
-        .inFilter('promo_id', promoIds);
 
-    final itemIds = List<int>.from(
-      items.map((item) => item['item_id']).whereType<int>(),
-    );
-
-    final menuItems = itemIds.isEmpty
-        ? <Map<String, dynamic>>[]
-        : List<Map<String, dynamic>>.from(
-            await _client
-                .from('menu_items')
-                .select('id,item_name,price')
-                .inFilter('id', itemIds),
-          );
 
     return [
       for (final promo in List<Map<String, dynamic>>.from(promos))
         {
-          ...promo,
+          ...promo
+            ..remove('promo_party')
+            ..remove('promo_items'),
           'items': List<Map<String, dynamic>>.from(
-            items.where((item) => item['promo_id'] == promo['id']).map((item) {
-              final menu = menuItems.firstWhere(
-                (menuItem) => menuItem['id'] == item['item_id'],
-                orElse: () => const <String, dynamic>{},
-              );
+           List<Map<String, dynamic>>.from(promo['promo_items'] ?? []).map((item) {
+              final menu = (item['menu_items'] as Map<String, dynamic>?) ??
+                  const <String, dynamic>{};
 
               return {
-                ...item,
+               ...item..remove('menu_items'),
                 'item_name': menu['item_name'],
                 'item_price': menu['price'],
               };

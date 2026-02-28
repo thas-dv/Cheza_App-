@@ -75,7 +75,7 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
       return PromotionEntity(
         id: promo['id'] as int,
         description: promo['promo_desc']?.toString() ?? '',
-        forEveryone: promo['for_everyone'] as bool? ?? true,
+        forEveryone: promo['unlimited'] as bool? ?? true,
         limit: promo['limite'] as int?,
         dateStart:
             DateTime.tryParse(promo['date_start']?.toString() ?? '') ??
@@ -88,10 +88,10 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
               (item) => PromoItemEntity(
                 id: item['id'] as int,
                 promoId: item['promo_id'] as int,
-                itemId: item['item_id'] as int,
+                itemId: item['menu_item_id'] as int,
                 itemName: item['item_name']?.toString() ?? 'Article',
                 itemPrice: (item['item_price'] as num?)?.toDouble() ?? 0,
-                isFreeOffer: item['is_free_offer'] as bool? ?? true,
+                isFreeOffer: item['is_free'] as bool? ?? true,
                 discountType: item['discount_type']?.toString(),
                 discountValue: (item['discount_value'] as num?)?.toDouble(),
               ),
