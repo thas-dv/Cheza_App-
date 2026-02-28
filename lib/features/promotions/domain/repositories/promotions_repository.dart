@@ -25,4 +25,14 @@ abstract class PromotionsRepository {
   Future<List<PromotionEntity>> loadPromos({required int partyId});
 
   Future<List<MenuItemOptionEntity>> loadMenuItems({required int placeId});
+   Future<void> updatePromo({
+    required int promoId,
+    required String description,
+    required bool unlimited,
+    int? limit,
+    required DateTime dateStart,
+    required DateTime dateEnd,
+  });
+
+  Future<void> deletePromo({required int promoId});
 }

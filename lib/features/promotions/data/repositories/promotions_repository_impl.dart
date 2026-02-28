@@ -100,4 +100,27 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
       );
     }).toList();
   }
+    @override
+  Future<void> updatePromo({
+    required int promoId,
+    required String description,
+    required bool unlimited,
+    int? limit,
+    required DateTime dateStart,
+    required DateTime dateEnd,
+  }) {
+    return _dataSource.updatePromo(
+      promoId: promoId,
+      description: description,
+      unlimited: unlimited,
+      limit: limit,
+      dateStart: dateStart,
+      dateEnd: dateEnd,
+    );
+  }
+
+  @override
+  Future<void> deletePromo({required int promoId}) {
+    return _dataSource.deletePromo(promoId: promoId);
+  }
 }

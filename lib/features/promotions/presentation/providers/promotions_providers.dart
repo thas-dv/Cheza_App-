@@ -46,7 +46,10 @@ final promotionsByPartyProvider =
     });
 
 final menuItemsByPlaceProvider =
-    FutureProvider.family<List<MenuItemOptionEntity>, int>((ref, placeId) async {
+    FutureProvider.family<List<MenuItemOptionEntity>, int>((
+      ref,
+      placeId,
+    ) async {
       return ref.read(loadMenuItemsUseCaseProvider)(placeId: placeId);
     });
 
@@ -65,17 +68,18 @@ class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
     try {
-      final promoId = await _ref
-          .read(createPromoUseCaseProvider)(
-            description: description,
-            unlimited: unlimited,
-            limit: limit,
-            dateStart: dateStart,
-            dateEnd: dateEnd,
-          );
+      final promoId = await _ref.read(createPromoUseCaseProvider)(
+        description: description,
+        unlimited: unlimited,
+        limit: limit,
+        dateStart: dateStart,
+        dateEnd: dateEnd,
+      );
 
-      await _ref
-          .read(attachPromoToPartyUseCaseProvider)(promoId: promoId, partyId: partyId);
+      await _ref.read(attachPromoToPartyUseCaseProvider)(
+        promoId: promoId,
+        partyId: partyId,
+      );
 
       _ref.read(promotionsRefreshTickProvider.notifier).state++;
       state = const AsyncData(null);
@@ -95,15 +99,57 @@ class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
     try {
+      await _ref.read(addPromoItemUseCaseProvider)(
+        promoId: promoId,
+        itemId: itemId,
+        isFreeOffer: isFreeOffer,
+        discountType: discountType,
+        discountValue: discountValue,
+      );
+
+      _ref.read(promotionsRefreshTickProvider.notifier).state++;
+      state = const AsyncData(null);
+    } catch (error, stack) {
+      state = AsyncError(error, stack);
+      rethrow;
+    }
+  }
+
+  Future<void> updatePromo({
+    required int promoId,
+    required String description,
+    required bool unlimited,
+    int? limit,
+    required DateTime dateStart,
+    required DateTime dateEnd,
+  }) async {
+    state = const AsyncLoading();
+    try {
       await _ref
-          .read(addPromoItemUseCaseProvider)(
+          .read(promotionsRepositoryProvider)
+          .updatePromo(
             promoId: promoId,
-            itemId: itemId,
-            isFreeOffer: isFreeOffer,
-            discountType: discountType,
-            discountValue: discountValue,
+            description: description,
+            unlimited: unlimited,
+            limit: limit,
+            dateStart: dateStart,
+            dateEnd: dateEnd,
           );
 
+      _ref.read(promotionsRefreshTickProvider.notifier).state++;
+      state = const AsyncData(null);
+    } catch (error, stack) {
+      state = AsyncError(error, stack);
+      rethrow;
+    }
+  }
+
+  Future<void> deletePromo({required int promoId}) async {
+    state = const AsyncLoading();
+    try {
+      await _ref
+          .read(promotionsRepositoryProvider)
+          .deletePromo(promoId: promoId);
       _ref.read(promotionsRefreshTickProvider.notifier).state++;
       state = const AsyncData(null);
     } catch (error, stack) {

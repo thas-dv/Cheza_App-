@@ -81,15 +81,31 @@ class PromotionsPage extends ConsumerWidget {
                       );
                     }
 
-                    return ListView.separated(
+                    final width = MediaQuery.of(context).size.width;
+                    final crossAxisCount = width < 700
+                        ? 1
+                        : width < 1100
+                        ? 2
+                        : 3;
+
+                    return GridView.builder(
                       itemCount: promotions.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 1,
+                      ),
                       itemBuilder: (context, index) {
                         final promo = promotions[index];
                         return _PromotionCard(
                           promotion: promo,
                           onAddItem: () =>
                               _openAddPromoItemDialog(context, ref, promo.id),
+                          onEdit: () =>
+                              _openEditPromoDialog(context, ref, promo),
+                          onDelete: () =>
+                              _confirmDeletePromo(context, ref, promo),
                         );
                       },
                     );
@@ -128,6 +144,271 @@ class PromotionsPage extends ConsumerWidget {
     );
   }
 
+  String formatDiscount(String type, double value) {
+    if (type == 'percentage') {
+      return '-${value.toStringAsFixed(0)} %';
+    } else if (type == 'amount') {
+      return '-${value.toStringAsFixed(0)} GNF';
+    } else {
+      return '';
+    }
+  }
+
+  Future<void> _openEditPromoDialog(
+    BuildContext context,
+    WidgetRef ref,
+    PromotionEntity promotion,
+  ) async {
+    final formKey = GlobalKey<FormState>();
+    final descCtrl = TextEditingController(text: promotion.description);
+    final limitCtrl = TextEditingController(
+      text: promotion.limit?.toString() ?? '',
+    );
+
+    bool forEveryone = promotion.forEveryone;
+    DateTime startDate = promotion.dateStart;
+    DateTime endDate = promotion.dateEnd;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            Future<void> pickDateTime({required bool isStart}) async {
+              final initial = isStart ? startDate : endDate;
+
+              final pickedDate = await showDatePicker(
+                context: dialogContext,
+                initialDate: initial,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2100),
+              );
+
+              if (pickedDate == null) return;
+
+              final pickedTime = await showTimePicker(
+                context: dialogContext,
+                initialTime: TimeOfDay.fromDateTime(initial),
+              );
+
+              if (pickedTime == null) return;
+
+              final combined = DateTime(
+                pickedDate.year,
+                pickedDate.month,
+                pickedDate.day,
+                pickedTime.hour,
+                pickedTime.minute,
+              );
+
+              setStateDialog(() {
+                if (isStart) {
+                  startDate = combined;
+                } else {
+                  endDate = combined;
+                }
+              });
+            }
+
+            return Dialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 24,
+              ),
+              backgroundColor: const Color(0xFF1E1E1E),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 600,
+                  maxHeight: MediaQuery.of(dialogContext).size.height * 0.85,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Modifier la promo',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      /// 🔥 FORM SCROLLABLE
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Form(
+                            key: formKey,
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  controller: descCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Description',
+                                  ),
+                                  validator: (value) =>
+                                      (value == null || value.trim().isEmpty)
+                                      ? 'Description requise'
+                                      : null,
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                CheckboxListTile(
+                                  value: forEveryone,
+                                  title: const Text('Pour tout le monde'),
+                                  onChanged: (value) => setStateDialog(
+                                    () => forEveryone = value ?? true,
+                                  ),
+                                ),
+
+                                if (!forEveryone)
+                                  TextFormField(
+                                    controller: limitCtrl,
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Limite',
+                                    ),
+                                    validator: (value) {
+                                      if (forEveryone) return null;
+                                      final parsed = int.tryParse(value ?? '');
+                                      if (parsed == null || parsed <= 0) {
+                                        return 'Limite invalide';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+
+                                const SizedBox(height: 16),
+
+                                ListTile(
+                                  title: const Text('Date début'),
+                                  subtitle: Text(
+                                    DateFormat(
+                                      'dd/MM/yyyy HH:mm',
+                                    ).format(startDate),
+                                  ),
+                                  trailing: const Icon(Icons.schedule),
+                                  onTap: () => pickDateTime(isStart: true),
+                                ),
+
+                                ListTile(
+                                  title: const Text('Date fin'),
+                                  subtitle: Text(
+                                    DateFormat(
+                                      'dd/MM/yyyy HH:mm',
+                                    ).format(endDate),
+                                  ),
+                                  trailing: const Icon(Icons.schedule),
+                                  onTap: () => pickDateTime(isStart: false),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      /// 🔥 ACTIONS FIXES
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Annuler'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) return;
+
+                              if (endDate.isBefore(startDate)) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'date_end doit être après date_start',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              try {
+                                await ref
+                                    .read(promotionsActionProvider.notifier)
+                                    .updatePromo(
+                                      promoId: promotion.id,
+                                      description: descCtrl.text.trim(),
+                                      unlimited: forEveryone,
+                                      limit: forEveryone
+                                          ? null
+                                          : int.tryParse(limitCtrl.text),
+                                      dateStart: startDate,
+                                      dateEnd: endDate,
+                                    );
+
+                                if (!context.mounted) return;
+
+                                Navigator.pop(dialogContext);
+                              } catch (_) {}
+                            },
+                            child: const Text('Enregistrer'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDeletePromo(
+    BuildContext context,
+    WidgetRef ref,
+    PromotionEntity promotion,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: const Text(
+          'Supprimer la promo ?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Voulez-vous supprimer "${promotion.description}" ?',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              try {
+                await ref
+                    .read(promotionsActionProvider.notifier)
+                    .deletePromo(promoId: promotion.id);
+                if (!context.mounted) return;
+                Navigator.pop(dialogContext);
+              } catch (_) {}
+            },
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _openCreatePromoDialog(
     BuildContext context,
     WidgetRef ref,
@@ -144,143 +425,211 @@ class PromotionsPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Future<void> pickDate({required bool isStart}) async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: isStart ? startDate : endDate,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2100),
+            Future<void> pickDateTime({required bool isStart}) async {
+              final initialDate = isStart ? startDate : endDate;
+
+              final pickedDate = await showDatePicker(
+                context: dialogContext,
+                initialDate: initialDate,
+                firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
               );
-              if (picked == null) return;
+
+              if (pickedDate == null) return;
+
+              final pickedTime = await showTimePicker(
+                context: dialogContext,
+                initialTime: TimeOfDay.fromDateTime(initialDate),
+              );
+
+              if (pickedTime == null) return;
+
+              final combined = DateTime(
+                pickedDate.year,
+                pickedDate.month,
+                pickedDate.day,
+                pickedTime.hour,
+                pickedTime.minute,
+              );
+
               setStateDialog(() {
                 if (isStart) {
-                  startDate = DateTime(
-                    picked.year,
-                    picked.month,
-                    picked.day,
-                    startDate.hour,
-                    startDate.minute,
-                  );
+                  startDate = combined;
                 } else {
-                  endDate = DateTime(
-                    picked.year,
-                    picked.month,
-                    picked.day,
-                    endDate.hour,
-                    endDate.minute,
-                  );
+                  endDate = combined;
                 }
               });
             }
 
-            return AlertDialog(
+            return Dialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 24,
+              ),
               backgroundColor: const Color(0xFF1E1E1E),
-              title: const Text(
-                'Créer une promo',
-                style: TextStyle(color: Colors.white),
-              ),
-              content: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      controller: descCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                      ),
-                      validator: (value) =>
-                          (value == null || value.trim().isEmpty)
-                          ? 'Description requise'
-                          : null,
-                    ),
-                    CheckboxListTile(
-                      value: forEveryone,
-                      title: const Text('Pour tout le monde'),
-                      onChanged: (value) => setStateDialog(() {
-                        forEveryone = value ?? true;
-                      }),
-                    ),
-                    if (!forEveryone)
-                      TextFormField(
-                        controller: limitCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Limite'),
-                        validator: (value) {
-                          if (forEveryone) return null;
-                          final parsed = int.tryParse(value ?? '');
-                          if (parsed == null || parsed <= 0) {
-                            return 'Limite invalide';
-                          }
-                          return null;
-                        },
-                      ),
-                    const SizedBox(height: 8),
-                    ListTile(
-                      title: const Text('Date début'),
-                      subtitle: Text(startDate.toString()),
-                      trailing: const Icon(Icons.calendar_month),
-                      onTap: () => pickDate(isStart: true),
-                    ),
-                    ListTile(
-                      title: const Text('Date fin'),
-                      subtitle: Text(endDate.toString()),
-                      trailing: const Icon(Icons.calendar_month),
-                      onTap: () => pickDate(isStart: false),
-                    ),
-                  ],
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 600,
+                  maxHeight: MediaQuery.of(dialogContext).size.height * 0.85,
                 ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Annuler'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-                    if (endDate.isBefore(startDate)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('date_end doit être après date_start'),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Créer une promo',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                      );
-                      return;
-                    }
+                      ),
+                      const SizedBox(height: 16),
 
-                    final partyId = activePartyId;
-                    if (partyId == null) return;
+                      /// 🔥 FORM SCROLLABLE
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Form(
+                            key: formKey,
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  controller: descCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Description',
+                                  ),
+                                  validator: (value) =>
+                                      (value == null || value.trim().isEmpty)
+                                      ? 'Description requise'
+                                      : null,
+                                ),
 
-                    try {
-                      final promoId = await ref
-                          .read(promotionsActionProvider.notifier)
-                          .createAndAttachPromo(
-                            description: descCtrl.text.trim(),
-                            unlimited: forEveryone,
-                            limit: forEveryone
-                                ? null
-                                : int.tryParse(limitCtrl.text),
-                            dateStart: startDate,
-                            dateEnd: endDate,
-                            partyId: partyId,
-                          );
-                      if (!context.mounted) return;
-                      Navigator.pop(dialogContext);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Promo créée.'),
-                          action: SnackBarAction(
-                            label: 'Ajouter articles',
-                            onPressed: () =>
-                                _openAddPromoItemDialog(context, ref, promoId),
+                                const SizedBox(height: 12),
+
+                                CheckboxListTile(
+                                  value: forEveryone,
+                                  title: const Text('Pour tout le monde'),
+                                  onChanged: (value) => setStateDialog(() {
+                                    forEveryone = value ?? true;
+                                  }),
+                                ),
+
+                                if (!forEveryone)
+                                  TextFormField(
+                                    controller: limitCtrl,
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Limite',
+                                    ),
+                                    validator: (value) {
+                                      if (forEveryone) return null;
+                                      final parsed = int.tryParse(value ?? '');
+                                      if (parsed == null || parsed <= 0) {
+                                        return 'Limite invalide';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+
+                                const SizedBox(height: 16),
+
+                                ListTile(
+                                  title: const Text('Date début'),
+                                  subtitle: Text(
+                                    DateFormat(
+                                      'dd/MM/yyyy HH:mm',
+                                    ).format(startDate),
+                                  ),
+                                  trailing: const Icon(Icons.schedule),
+                                  onTap: () => pickDateTime(isStart: true),
+                                ),
+
+                                ListTile(
+                                  title: const Text('Date fin'),
+                                  subtitle: Text(
+                                    DateFormat(
+                                      'dd/MM/yyyy HH:mm',
+                                    ).format(endDate),
+                                  ),
+                                  trailing: const Icon(Icons.schedule),
+                                  onTap: () => pickDateTime(isStart: false),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      );
-                    } catch (_) {}
-                  },
-                  child: const Text('Enregistrer'),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      /// 🔥 ACTIONS FIXES EN BAS
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Annuler'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) return;
+
+                              if (endDate.isBefore(startDate)) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'date_end doit être après date_start',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              final partyId = activePartyId;
+                              if (partyId == null) return;
+
+                              try {
+                                final promoId = await ref
+                                    .read(promotionsActionProvider.notifier)
+                                    .createAndAttachPromo(
+                                      description: descCtrl.text.trim(),
+                                      unlimited: forEveryone,
+                                      limit: forEveryone
+                                          ? null
+                                          : int.tryParse(limitCtrl.text),
+                                      dateStart: startDate,
+                                      dateEnd: endDate,
+                                      partyId: partyId,
+                                    );
+
+                                if (!context.mounted) return;
+
+                                Navigator.pop(dialogContext);
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Promo créée.'),
+                                    action: SnackBarAction(
+                                      label: 'Ajouter articles',
+                                      onPressed: () => _openAddPromoItemDialog(
+                                        context,
+                                        ref,
+                                        promoId,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              } catch (_) {}
+                            },
+                            child: const Text('Enregistrer'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             );
           },
         );
@@ -308,7 +657,7 @@ class PromotionsPage extends ConsumerWidget {
 
     MenuItemOptionEntity? selectedItem = items.first;
     bool isFreeOffer = true;
-    String discountType = 'percentage';
+    String discountType = 'Pourcentage';
     final valueCtrl = TextEditingController();
 
     await showDialog<void>(
@@ -316,111 +665,167 @@ class PromotionsPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            return AlertDialog(
+            return Dialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 24,
+              ),
               backgroundColor: const Color(0xFF1E1E1E),
-              title: const Text(
-                'Ajouter article',
-                style: TextStyle(color: Colors.white),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<MenuItemOptionEntity>(
-                    value: selectedItem,
-                    items: items
-                        .map(
-                          (item) => DropdownMenuItem(
-                            value: item,
-                            child: Text(
-                              '${item.name} (${item.price.toStringAsFixed(2)})',
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) =>
-                        setStateDialog(() => selectedItem = value),
-                    decoration: const InputDecoration(
-                      labelText: 'Article du menu',
-                    ),
-                  ),
-                  CheckboxListTile(
-                    value: isFreeOffer,
-                    title: const Text('Offre gratuite'),
-                    onChanged: (value) => setStateDialog(() {
-                      isFreeOffer = value ?? true;
-                    }),
-                  ),
-                  if (!isFreeOffer) ...[
-                    DropdownButtonFormField<String>(
-                      value: discountType,
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'percentage',
-                          child: Text('Pourcentage'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'amount',
-                          child: Text('Montant'),
-                        ),
-                      ],
-                      onChanged: (value) => setStateDialog(
-                        () => discountType = value ?? 'percentage',
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: 'Type réduction',
-                      ),
-                    ),
-                    TextField(
-                      controller: valueCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: 'Valeur réduction',
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Annuler'),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 600,
+                  maxHeight: MediaQuery.of(dialogContext).size.height * 0.85,
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final selected = selectedItem;
-                    if (selected == null) return;
-                    final discountValue = double.tryParse(
-                      valueCtrl.text.replaceAll(',', '.'),
-                    );
-                    if (!isFreeOffer &&
-                        (discountValue == null || discountValue <= 0)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Valeur réduction invalide.'),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Ajouter article',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                      );
-                      return;
-                    }
+                      ),
+                      const SizedBox(height: 16),
 
-                    try {
-                      await ref
-                          .read(promotionsActionProvider.notifier)
-                          .addItemToPromo(
-                            promoId: promoId,
-                            itemId: selected.id,
-                            isFreeOffer: isFreeOffer,
-                            discountType: isFreeOffer ? null : discountType,
-                            discountValue: isFreeOffer ? null : discountValue,
-                          );
-                      if (!context.mounted) return;
-                      Navigator.pop(dialogContext);
-                    } catch (_) {}
-                  },
-                  child: const Text('Ajouter'),
+                      /// 🔥 CONTENU SCROLLABLE
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              DropdownButtonFormField<MenuItemOptionEntity>(
+                                value: selectedItem,
+                                items: items
+                                    .map(
+                                      (item) => DropdownMenuItem(
+                                        value: item,
+                                        child: Text(
+                                          '${item.name} (${item.price.toStringAsFixed(0)})',
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) =>
+                                    setStateDialog(() => selectedItem = value),
+                                decoration: const InputDecoration(
+                                  labelText: 'Article du menu',
+                                ),
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              CheckboxListTile(
+                                value: isFreeOffer,
+                                title: const Text('Offre gratuite'),
+                                onChanged: (value) => setStateDialog(() {
+                                  isFreeOffer = value ?? true;
+                                }),
+                              ),
+
+                              if (!isFreeOffer) ...[
+                                const SizedBox(height: 10),
+
+                                DropdownButtonFormField<String>(
+                                  value: discountType,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'Pourcentage',
+                                      child: Text('Pourcentage'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Montant',
+                                      child: Text('Montant'),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setStateDialog(() {
+                                      discountType = value ?? 'Pourcentage';
+                                    });
+                                  },
+                                  decoration: const InputDecoration(
+                                    labelText: 'Type réduction',
+                                  ),
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                TextField(
+                                  controller: valueCtrl,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Valeur réduction',
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      /// 🔥 ACTIONS FIXES
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Annuler'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: () async {
+                              final selected = selectedItem;
+                              if (selected == null) return;
+
+                              final discountValue = double.tryParse(
+                                valueCtrl.text.replaceAll(',', '.'),
+                              );
+
+                              if (!isFreeOffer &&
+                                  (discountValue == null ||
+                                      discountValue <= 0)) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Valeur réduction invalide.'),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              try {
+                                await ref
+                                    .read(promotionsActionProvider.notifier)
+                                    .addItemToPromo(
+                                      promoId: promoId,
+                                      itemId: selected.id,
+                                      isFreeOffer: isFreeOffer,
+                                      discountType: isFreeOffer
+                                          ? null
+                                          : discountType,
+                                      discountValue: isFreeOffer
+                                          ? null
+                                          : discountValue,
+                                    );
+
+                                if (!context.mounted) return;
+
+                                Navigator.pop(dialogContext);
+                              } catch (_) {}
+                            },
+                            child: const Text('Ajouter'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             );
           },
         );
@@ -430,11 +835,17 @@ class PromotionsPage extends ConsumerWidget {
 }
 
 class _PromotionCard extends StatelessWidget {
-  const _PromotionCard({required this.promotion, required this.onAddItem});
+  const _PromotionCard({
+    required this.promotion,
+    required this.onAddItem,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final PromotionEntity promotion;
   final VoidCallback onAddItem;
-
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
   String _formatGNF(double value) {
     final formatter = NumberFormat('#,###', 'fr_FR');
     return '${formatter.format(value)} GNF';
@@ -443,10 +854,10 @@ class _PromotionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.deepIndigo.withOpacity(0.8)),
       ),
       child: Column(
@@ -460,14 +871,29 @@ class _PromotionCard extends StatelessWidget {
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 15,
                   ),
                 ),
               ),
-              OutlinedButton.icon(
-                onPressed: onAddItem,
-                icon: const Icon(Icons.add_shopping_cart),
-                label: const Text('Ajouter articles'),
+
+              Wrap(
+                spacing: 6,
+                children: [
+                  IconButton(
+                    tooltip: 'Modifier',
+                    onPressed: onEdit,
+                    icon: const Icon(
+                      Icons.edit,
+                      color: Colors.orange,
+                      size: 20,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Supprimer',
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                  ),
+                ],
               ),
             ],
           ),
@@ -489,61 +915,92 @@ class _PromotionCard extends StatelessWidget {
               style: TextStyle(color: Colors.grey),
             )
           else
-            ...promotion.items.map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundDark,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.local_offer_rounded,
-                        color: AppColors.neonPurple,
-                        size: 18,
+            SizedBox(
+              height: 130, // 🔥 hauteur zone scroll
+              child: ListView.builder(
+                itemCount: promotion.items.length,
+                itemBuilder: (context, index) {
+                  final item = promotion.items[index];
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          item.itemName,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundDark,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.local_offer_rounded,
+                            color: AppColors.neonPurple,
+                            size: 18,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          const SizedBox(width: 8),
+
+                          Expanded(
+                            child: Text(
+                              item.itemName,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          Text(
+                            item.isFreeOffer
+                                ? 'Gratuit'
+                                : item.discountType == 'Pourcentage'
+                                ? '-${item.discountValue?.toStringAsFixed(0) ?? '0'}%'
+                                : '-${_formatGNF(item.discountValue ?? 0)}',
+                            style: const TextStyle(
+                              color: AppColors.neonBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          if (!item.isFreeOffer) ...[
+                            const SizedBox(width: 10),
+                            Text(
+                              _formatGNF(item.itemPrice),
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        item.isFreeOffer
-                            ? 'Gratuit'
-                            : item.discountType == 'percentage'
-                            ? '-${item.discountValue?.toStringAsFixed(0) ?? '0'}%'
-                            : '-${_formatGNF(item.discountValue ?? 0)}',
-                        style: const TextStyle(
-                          color: AppColors.neonBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        _formatGNF(item.itemPrice),
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
             ),
+
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: onAddItem,
+                icon: const Icon(Icons.add_shopping_cart, size: 18),
+                label: const Text('Ajouter article'),
+              ),
+              SizedBox(width: 10),
+              TextButton.icon(
+                onPressed: onAddItem,
+                icon: const Icon(Icons.attribution, size: 18),
+                label: const Text('Attribuer'),
+              ),
+            ],
+          ),
         ],
       ),
     );

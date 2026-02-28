@@ -116,6 +116,32 @@ class PromotionsSupabaseDataSource {
     }).toList();
   }
 
+
+  Future<void> updatePromo({
+    required int promoId,
+    required String description,
+    required bool unlimited,
+    int? limit,
+    required DateTime dateStart,
+    required DateTime dateEnd,
+  }) async {
+    await _client
+        .from('promos')
+        .update({
+          'promo_desc': description,
+          'unlimited': unlimited,
+          'limite': unlimited ? null : limit,
+          'date_start': dateStart.toIso8601String(),
+          'date_end': dateEnd.toIso8601String(),
+        })
+        .eq('id', promoId);
+  }
+
+  Future<void> deletePromo({required int promoId}) async {
+    await _client.from('promo_items').delete().eq('promo_id', promoId);
+    await _client.from('promo_party').delete().eq('promo_id', promoId);
+    await _client.from('promos').delete().eq('id', promoId);
+  }
   Future<List<Map<String, dynamic>>> loadMenuItems({
     required int placeId,
   }) async {
