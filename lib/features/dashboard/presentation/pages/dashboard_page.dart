@@ -13,6 +13,7 @@ import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/parties_t
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/settings_tab.dart';
 import 'package:cheza_app/providers/party_providers.dart'
     hide dashboardStatsProvider, DashboardStats;
+import 'package:cheza_app/features/promotions/presentation/pages/promotions_page.dart';
 import 'package:cheza_app/core/storage/local_party_storage.dart';
 import 'package:marquee/marquee.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';
@@ -922,13 +923,63 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ),
                 ],
               ),
+                bottomNavigationBar: isLarge
+                  ? null
+                  : BottomNavigationBar(
+                      type: BottomNavigationBarType.fixed,
+                      currentIndex: _mobileTabIndex,
+                      onTap: _onTapMobileNav,
+                      items: const [
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.dashboard_outlined),
+                          label: 'Dashboard',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.campaign_outlined),
+                          label: 'Posts',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.groups_2_outlined),
+                          label: 'Clientèle',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.local_offer_outlined),
+                          label: 'Promotions',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.settings_outlined),
+                          label: 'Settings',
+                        ),
+                      ],
+                    ),
             ),
           ),
         );
       },
     );
   }
-
+//Index
+  int get _mobileTabIndex {
+    return switch (selectedIndex) {
+      7 => 1,
+      6 => 2,
+      3 => 3,
+      5 => 4,
+      _ => 0,
+    };
+  }
+//Index Tap
+  void _onTapMobileNav(int index) {
+    setState(() {
+      selectedIndex = switch (index) {
+        1 => 7,
+        2 => 6,
+        3 => 3,
+        4 => 5,
+        _ => 0,
+      };
+    });
+  }
   // Widget _headerBar(bool isLarge) {
   //   return Container(
   //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1096,7 +1147,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         return const Text("Membres");
 
       case 3:
-        return PromotionPage(
+       return PromotionPage(
           placeId: placeId,
           activePartyId: activePartyId,
           placeName: placeName,
