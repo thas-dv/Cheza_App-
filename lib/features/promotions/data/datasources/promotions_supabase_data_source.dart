@@ -116,7 +116,6 @@ class PromotionsSupabaseDataSource {
     }).toList();
   }
 
-
   Future<void> updatePromo({
     required int promoId,
     required String description,
@@ -142,23 +141,14 @@ class PromotionsSupabaseDataSource {
     await _client.from('promo_party').delete().eq('promo_id', promoId);
     await _client.from('promos').delete().eq('id', promoId);
   }
-  Future<List<Map<String, dynamic>>> loadMenuItems({
-    required int placeId,
+
+  Future<List<Map<String, dynamic>>> fetchMenuItemsByMenu({
+    required int menuId,
   }) async {
-    final menus = await _client
-        .from('menu')
-        .select('id')
-        .eq('place_id', placeId);
-
-    final menuIds = List<int>.from(
-      menus.map((menu) => menu['id']).whereType<int>(),
-    );
-    if (menuIds.isEmpty) return [];
-
     final items = await _client
         .from('menu_items')
-        .select('id,item_name,price')
-        .inFilter('menu_id', menuIds)
+        .select('id,item_name,price,menu_id')
+        .eq('menu_id', menuId)
         .order('item_name', ascending: true);
 
     return List<Map<String, dynamic>>.from(items);

@@ -24,8 +24,9 @@ abstract class PromotionsRepository {
 
   Future<List<PromotionEntity>> loadPromos({required int partyId});
 
-  Future<List<MenuItemOptionEntity>> loadMenuItems({required int placeId});
-   Future<void> updatePromo({
+ Future<List<MenuItemOptionEntity>> getMenuItemsByMenu({required int menuId});
+
+  Future<void> updatePromo({
     required int promoId,
     required String description,
     required bool unlimited,

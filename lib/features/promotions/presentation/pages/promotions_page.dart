@@ -106,6 +106,7 @@ class PromotionsPage extends ConsumerWidget {
                               _openEditPromoDialog(context, ref, promo),
                           onDelete: () =>
                               _confirmDeletePromo(context, ref, promo),
+                          onAssign: () => _showAssignComingSoon(context),
                         );
                       },
                     );
@@ -141,6 +142,14 @@ class PromotionsPage extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showAssignComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("L'attribution de promotion arrive bientôt."),
+      ),
     );
   }
 
@@ -840,12 +849,14 @@ class _PromotionCard extends StatelessWidget {
     required this.onAddItem,
     required this.onEdit,
     required this.onDelete,
+    required this.onAssign,
   });
 
   final PromotionEntity promotion;
   final VoidCallback onAddItem;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onAssing;
   String _formatGNF(double value) {
     final formatter = NumberFormat('#,###', 'fr_FR');
     return '${formatter.format(value)} GNF';
@@ -995,7 +1006,7 @@ class _PromotionCard extends StatelessWidget {
               ),
               SizedBox(width: 10),
               TextButton.icon(
-                onPressed: onAddItem,
+                onPressed: onAssing,
                 icon: const Icon(Icons.attribution, size: 18),
                 label: const Text('Attribuer'),
               ),

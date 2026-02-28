@@ -50,10 +50,10 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
   }
 
   @override
-  Future<List<MenuItemOptionEntity>> loadMenuItems({
-    required int placeId,
+  Future<List<MenuItemOptionEntity>> getMenuItemsByMenu({
+    required int menuId,
   }) async {
-    final raw = await _dataSource.loadMenuItems(placeId: placeId);
+    final raw = await _dataSource.fetchMenuItemsByMenu(menuId: menuId);
     return raw
         .map(
           (item) => MenuItemOptionEntity(
@@ -100,7 +100,8 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
       );
     }).toList();
   }
-    @override
+
+  @override
   Future<void> updatePromo({
     required int promoId,
     required String description,
