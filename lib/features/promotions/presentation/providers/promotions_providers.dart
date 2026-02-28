@@ -57,7 +57,7 @@ class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<int> createAndAttachPromo({
     required String description,
-    required bool forEveryone,
+    required bool unlimited,
     int? limit,
     required DateTime dateStart,
     required DateTime dateEnd,
@@ -68,7 +68,7 @@ class PromotionsActionNotifier extends StateNotifier<AsyncValue<void>> {
       final promoId = await _ref
           .read(createPromoUseCaseProvider)(
             description: description,
-            forEveryone: forEveryone,
+            unlimited: unlimited,
             limit: limit,
             dateStart: dateStart,
             dateEnd: dateEnd,

@@ -25,21 +25,24 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
   }
 
   @override
-  Future<void> attachPromoToParty({required int promoId, required int partyId}) {
+  Future<void> attachPromoToParty({
+    required int promoId,
+    required int partyId,
+  }) {
     return _dataSource.attachPromoToParty(promoId: promoId, partyId: partyId);
   }
 
   @override
   Future<int> createPromo({
     required String description,
-    required bool forEveryone,
+    required bool unlimited,
     int? limit,
     required DateTime dateStart,
     required DateTime dateEnd,
   }) {
     return _dataSource.createPromo(
       description: description,
-      forEveryone: forEveryone,
+      unlimited: unlimited,
       limit: limit,
       dateStart: dateStart,
       dateEnd: dateEnd,
@@ -47,7 +50,9 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
   }
 
   @override
-  Future<List<MenuItemOptionEntity>> loadMenuItems({required int placeId}) async {
+  Future<List<MenuItemOptionEntity>> loadMenuItems({
+    required int placeId,
+  }) async {
     final raw = await _dataSource.loadMenuItems(placeId: placeId);
     return raw
         .map(
@@ -72,9 +77,11 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
         description: promo['promo_desc']?.toString() ?? '',
         forEveryone: promo['for_everyone'] as bool? ?? true,
         limit: promo['limite'] as int?,
-        dateStart: DateTime.tryParse(promo['date_start']?.toString() ?? '') ??
+        dateStart:
+            DateTime.tryParse(promo['date_start']?.toString() ?? '') ??
             DateTime.now(),
-        dateEnd: DateTime.tryParse(promo['date_end']?.toString() ?? '') ??
+        dateEnd:
+            DateTime.tryParse(promo['date_end']?.toString() ?? '') ??
             DateTime.now(),
         items: items
             .map(

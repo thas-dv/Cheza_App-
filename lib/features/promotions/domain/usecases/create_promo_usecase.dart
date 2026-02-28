@@ -7,14 +7,14 @@ class CreatePromoUseCase {
 
   Future<int> call({
     required String description,
-    required bool forEveryone,
+    required bool unlimited,
     int? limit,
     required DateTime dateStart,
     required DateTime dateEnd,
   }) {
     return _repository.createPromo(
       description: description,
-      forEveryone: forEveryone,
+      unlimited: unlimited,
       limit: limit,
       dateStart: dateStart,
       dateEnd: dateEnd,

@@ -240,7 +240,7 @@ class PromotionsPage extends ConsumerWidget {
                           .read(promotionsActionProvider.notifier)
                           .createAndAttachPromo(
                             description: descCtrl.text.trim(),
-                            forEveryone: forEveryone,
+                            unlimited: forEveryone,
                             limit: forEveryone ? null : int.tryParse(limitCtrl.text),
                             dateStart: startDate,
                             dateEnd: endDate,

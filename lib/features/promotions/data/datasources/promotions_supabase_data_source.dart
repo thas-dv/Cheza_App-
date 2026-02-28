@@ -8,7 +8,7 @@ class PromotionsSupabaseDataSource {
 
   Future<int> createPromo({
     required String description,
-    required bool forEveryone,
+    required bool unlimited,
     int? limit,
     required DateTime dateStart,
     required DateTime dateEnd,
@@ -17,8 +17,8 @@ class PromotionsSupabaseDataSource {
         .from('promos')
         .insert({
           'promo_desc': description,
-          'for_everyone': forEveryone,
-          'limite': forEveryone ? null : limit,
+          'unlimited': unlimited,
+          'limite': unlimited ? null : limit,
           'date_start': dateStart.toIso8601String(),
           'date_end': dateEnd.toIso8601String(),
         })
@@ -68,14 +68,14 @@ class PromotionsSupabaseDataSource {
 
     final promos = await _client
         .from('promos')
-        .select('id,promo_desc,for_everyone,limite,date_start,date_end')
+        .select('id,promo_desc,unlimited,limite,date_start,date_end')
         .inFilter('id', promoIds)
         .order('date_start', ascending: false);
 
     final items = await _client
         .from('promo_items')
         .select(
-          'id,promo_id,item_id,is_free_offer,discount_type,discount_value',
+          'id,promo_id,menu_item_id,is_free_offer,discount_type,discount_value',
         )
         .inFilter('promo_id', promoIds);
 

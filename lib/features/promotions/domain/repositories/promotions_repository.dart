@@ -3,7 +3,7 @@ import 'package:cheza_app/features/promotions/domain/entities/promotion_entity.d
 abstract class PromotionsRepository {
   Future<int> createPromo({
     required String description,
-    required bool forEveryone,
+    required bool unlimited,
     int? limit,
     required DateTime dateStart,
     required DateTime dateEnd,
