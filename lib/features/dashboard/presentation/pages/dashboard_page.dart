@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:cheza_app/core/ui/responsive_layout.dart';
+import 'package:cheza_app/features/auth/presentation/providers/admin_provider.dart';
 import 'package:cheza_app/widgets/adaptive_network_image.dart';
 import 'package:cheza_app/features/dashboard/domain/entities/dashboard_stats.dart';
 import 'package:cheza_app/features/dashboard/presentation/providers/dashboard_providers.dart';
@@ -50,6 +51,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   bool loadingDashboard = true;
   bool networkError = false;
   int? _currentPartyId;
+  String adminName = "";
   String placeName = "Nom du Lieu";
   String partyName = "";
   // String? placePhotoUrl;
@@ -64,7 +66,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   void initState() {
     super.initState();
     _loadMyPlace();
-
+    // _loadAdmin();
     _networkSub = NetworkService.connectionStream.listen((isConnected) async {
       if (isConnected && mounted) {
         debugPrint("🔄 Internet back → refresh dashboard");
@@ -734,7 +736,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         ref.watch(activePartyIdProvider);
         final DashboardStats? stats = ref.watch(dashboardStatsProvider);
         final clients = ref.watch(clienteleProvider);
-        final placePhotoUrl = ref.watch(placePhotoProvider);
+
         // WidgetsBinding.instance.addPostFrameCallback((_) {
         //   if (mounted && clienteleCount != clients.length) {
         //     setState(() => clienteleCount = clients.length);
@@ -805,101 +807,96 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               body: Row(
                 children: [
                   // ===== DRAWER FIXE DESKTOP =====
-                  if (isLarge)
-                    Container(
-                      width: 280,
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF0F172A), Color(0xFF111827)],
-                        ),
-                      ),
-                      padding: const EdgeInsets.only(top: 30),
-                      child: Column(
-                        children: [
-                          /// ===== LOGO DU LIEU =====
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: Colors.grey.shade800,
-                                  ),
-                                  child: placePhotoUrl == null
-                                      ? const Icon(
-                                          Icons.place,
-                                          color: Colors.white,
-                                        )
-                                      : ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          child: AdaptiveNetworkImage(
-                                            imageUrl: placePhotoUrl,
-                                            fit: BoxFit.cover,
-                                            placeholderIcon: Icons.place,
-                                          ),
-                                        ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    placeName,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      height: 1.2,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                  if (isLarge) _modernSidebar(isLarge),
+                  // if (isLarge)
+                  //   Container(
+                  //     width: 280,
+                  //     decoration: const BoxDecoration(
+                  //       gradient: LinearGradient(
+                  //         begin: Alignment.topLeft,
+                  //         end: Alignment.bottomRight,
+                  //         colors: [Color(0xFF0F172A), Color(0xFF111827)],
+                  //       ),
+                  //     ),
+                  //     padding: const EdgeInsets.only(top: 30),
+                  //     child: Column(
+                  //       children: [
+                  //         /// ===== LOGO DU LIEU =====
+                  //         Padding(
+                  //           padding: const EdgeInsets.symmetric(horizontal: 20),
+                  //           child: Row(
+                  //             children: [
+                  //               Container(
+                  //                 width: 80,
+                  //                 height: 80,
+                  //                 decoration: BoxDecoration(
+                  //                   borderRadius: BorderRadius.circular(12),
+                  //                   color: Colors.grey.shade800,
+                  //                 ),
+                  //                 child: placePhotoUrl == null
+                  //                     ? const Icon(
+                  //                         Icons.place,
+                  //                         color: Colors.white,
+                  //                       )
+                  //                     : ClipRRect(
+                  //                         borderRadius: BorderRadius.circular(
+                  //                           12,
+                  //                         ),
+                  //                         child: AdaptiveNetworkImage(
+                  //                           imageUrl: placePhotoUrl,
+                  //                           fit: BoxFit.cover,
+                  //                           placeholderIcon: Icons.place,
+                  //                         ),
+                  //                       ),
+                  //               ),
+                  //               const SizedBox(width: 12),
+                  //               Expanded(
+                  //                 child: Text(
+                  //                   placeName,
+                  //                   maxLines: 2,
+                  //                   overflow: TextOverflow.ellipsis,
+                  //                   style: const TextStyle(
+                  //                     color: Colors.white,
+                  //                     fontWeight: FontWeight.bold,
+                  //                     fontSize: 20,
+                  //                     height: 1.2,
+                  //                   ),
+                  //                 ),
+                  //               ),
+                  //             ],
+                  //           ),
+                  //         ),
 
-                          const SizedBox(height: 40),
+                  //         const SizedBox(height: 40),
 
-                          _menuItem("Accueil", Icons.home, 0, isLarge),
-                          _menuItem(
-                            "Historiques",
-                            Icons.history_outlined,
-                            1,
-                            isLarge,
-                          ),
-                          _menuItem("Membres", Icons.person, 2, isLarge),
-                          _menuItem(
-                            "Promotions",
-                            Icons.propane_tank,
-                            3,
-                            isLarge,
-                          ),
-                          _menuItem("Menus", Icons.menu_book, 4, isLarge),
-                          _menuItem("Evenement", Icons.menu_book, 4, isLarge),
-                          const Spacer(),
-                          _menuItem("Paramètres", Icons.settings, 5, isLarge),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
+                  //         _menuItem("Accueil", Icons.home, 0, isLarge),
+                  //         _menuItem(
+                  //           "Historiques",
+                  //           Icons.history_outlined,
+                  //           1,
+                  //           isLarge,
+                  //         ),
+                  //         _menuItem("Membres", Icons.person, 2, isLarge),
+                  //         _menuItem(
+                  //           "Promotions",
+                  //           Icons.propane_tank,
+                  //           3,
+                  //           isLarge,
+                  //         ),
+                  //         _menuItem("Menus", Icons.menu_book, 4, isLarge),
+                  //         _menuItem("Evenement", Icons.menu_book, 4, isLarge),
+                  //         const Spacer(),
+                  //         _menuItem("Paramètres", Icons.settings, 5, isLarge),
+                  //         const SizedBox(height: 20),
+                  //       ],
+                  //     ),
+                  //   ),
 
                   // ===== CONTENU PRINCIPAL =====
                   Expanded(
                     child: Stack(
                       children: [
                         /// Background image plein écran
-                        Positioned.fill(
-                          child: Image.asset(
-                            "assets/images/fondprincipal.png",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
 
                         /// Overlay bleu nuit
                         Positioned.fill(
@@ -908,11 +905,24 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           ),
                         ),
 
+                        // Column(
+                        //   children: [
+                        //     _modernSidebar(isLarge),
+
+                        //     /// ===== LIGNE SEPARATRICE =====
+                        //     Container(
+                        //       height: 1,
+                        //       width: double.infinity,
+                        //       color: Colors.white.withOpacity(0.08),
+                        //     ),
+
+                        //     Expanded(child: _buildSelectedPage()),
+                        //   ],
+                        // ),
                         Column(
                           children: [
-                            _topNavigationBar(isLarge),
+                            _modernTopBar(isLarge),
 
-                            /// ===== LIGNE SEPARATRICE =====
                             Container(
                               height: 1,
                               width: double.infinity,
@@ -986,6 +996,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       };
     });
   }
+
   // Widget _headerBar(bool isLarge) {
   //   return Container(
   //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1090,6 +1101,145 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   // =============================================================
   // MENU GAUCHE — ITEM CLIQUABLE
   // =============================================================
+  Widget _modernMenuItem(String title, IconData icon, int index) {
+    final selected = selectedIndex == index;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xFF1F2937) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: selected ? Colors.blueAccent : Colors.grey),
+        title: Text(
+          title,
+          style: TextStyle(color: selected ? Colors.white : Colors.grey),
+        ),
+        onTap: () {
+          setState(() => selectedIndex = index);
+        },
+      ),
+    );
+  }
+
+  /////////////////////::
+  Widget _modernTopBar(bool isLarge) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 18),
+      child: Row(
+        children: [
+          if (!isLarge)
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+
+          if (isLarge) ...[
+            _topStat("Visiteurs", lastKnownClienteleCount),
+            const SizedBox(width: 30),
+            _topStat("Posts", postsCount),
+            const SizedBox(width: 30),
+            _topStat("Notes", notesCount),
+            const SizedBox(width: 30),
+          ],
+
+          const Spacer(),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isOpen
+                  ? Colors.green.withOpacity(0.15)
+                  : Colors.red.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              isOpen ? "Ouvert" : "Fermé",
+              style: TextStyle(
+                color: isOpen ? Colors.green : Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          const CircleAvatar(radius: 18),
+
+          const SizedBox(width: 12),
+
+          _actionButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _topStat(String label, int value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value.toString(),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      ],
+    );
+  }
+  // Widget _modernTopBar(bool isLarge) {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 18),
+  //     child: Row(
+  //       children: [
+  //         if (!isLarge)
+  //           Builder(
+  //             builder: (context) => IconButton(
+  //               icon: const Icon(Icons.menu, color: Colors.white),
+  //               onPressed: () => Scaffold.of(context).openDrawer(),
+  //             ),
+  //           ),
+
+  //         const Spacer(),
+
+  //         // Statut
+  //         Container(
+  //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  //           decoration: BoxDecoration(
+  //             color: isOpen
+  //                 ? Colors.green.withOpacity(0.15)
+  //                 : Colors.red.withOpacity(0.15),
+  //             borderRadius: BorderRadius.circular(20),
+  //           ),
+  //           child: Text(
+  //             isOpen ? "Ouvert" : "Fermé",
+  //             style: TextStyle(
+  //               color: isOpen ? Colors.green : Colors.red,
+  //               fontWeight: FontWeight.bold,
+  //             ),
+  //           ),
+  //         ),
+
+  //         const SizedBox(width: 16),
+
+  //         const CircleAvatar(radius: 18, backgroundColor: Colors.grey),
+
+  //         const SizedBox(width: 12),
+
+  //         _actionButton(),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // //////////////////
   Widget _menuItem(String title, IconData icon, int index, bool isLarge) {
     final bool selected = selectedIndex == index;
 
@@ -1224,105 +1374,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   // =============================================================
   // PAGE D’ACCUEIL
   // =============================================================
-  // Widget _homePage() {
-  //   final int? partyId = ref.watch(activePartyIdProvider);
-
-  //   final postsState = partyId != null
-  //       ? ref.watch(postsProvider(partyId))
-  //       : null;
-
-  //   // 🔥 COUNT FINAL (ONLINE → serveur, OFFLINE → cache)
-  //   final int effectivePostsCount = (postsCount > 0)
-  //       ? postsCount
-  //       : (postsState?.posts.length ?? 0);
-  //   return SingleChildScrollView(
-  //     padding: const EdgeInsets.all(30),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         // --- LIGNE DES 4 CARDS (STATISTIQUES) ---
-  //         Row(
-  //           children: [
-  //             _bigStatCard(
-  //               "Visiteurs",
-  //               value: lastKnownClienteleCount,
-  //               Icons.group,
-  //               Colors.blue,
-  //               onTap: () {
-  //                 debugPrint(
-  //                   "👆 TAP Visiteurs | isOpen=$isOpen | count=$lastKnownClienteleCount",
-  //                 );
-  //                 setState(() => selectedIndex = 6);
-  //               },
-  //             ),
-  //             // _bigStatCard(
-  //             //   "Posts",
-  //             //   value: postsCount,
-  //             //   Icons.photo,
-  //             //   Colors.purple,
-  //             //   onTap: () => setState(() => selectedIndex = 7),
-  //             // ),
-  //             _bigStatCard(
-  //               "Posts",
-  //               value: effectivePostsCount, // ✅ fallback offline
-  //               Icons.photo,
-  //               Colors.purple,
-  //               onTap: () {
-  //                 debugPrint(
-  //                   "📝 TAP Posts | online=${NetworkService.isConnected} | count=$effectivePostsCount",
-  //                 );
-  //                 setState(() => selectedIndex = 7);
-  //               },
-  //             ),
-  //             _bigStatCard(
-  //               "Notes",
-  //               value: notesCount,
-  //               Icons.star,
-  //               Colors.orange,
-  //               onTap: () => setState(() => selectedIndex = 8),
-  //             ),
-
-  //             _bigStatCard(
-  //               "Engagement",
-  //               value: engagementCount,
-  //               Icons.show_chart,
-  //               Colors.green,
-  //               onTap: () => setState(() => selectedIndex = 9),
-  //             ),
-  //           ],
-  //         ),
-
-  //         const SizedBox(height: 25),
-
-  //         // --- DESCRIPTION DU LIEU ---
-  //         _infoCard(
-  //           title: "Description du lieu",
-  //           content:
-  //               "Bienvenue dans votre espace de gestion.\n\n"
-  //               "Ici vous pouvez suivre l’activité du lieu, gérer vos clients, "
-  //               "vérifier les posts, analyser les notes et ajuster les paramètres.\n\n"
-  //               "Ajoutez ici la vraie description de votre établissement.",
-  //         ),
-
-  //         const SizedBox(height: 20),
-
-  //         // --- INFO DU LIEU ---
-  //         _infoCard(
-  //           title: "Informations",
-  //           content:
-  //               "📍 Conakry, Guinée\n"
-  //               "🏢 Lieu créé depuis 3 ans\n"
-  //               "🕒 Horaires configurables dans l’en-tête",
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
   Widget _homePage() {
     if (!isOpen) {
       return _closedPlaceView(); // 👈 NOUVEAU VISUEL
     }
-
+    final placePhotoUrl = ref.watch(placePhotoProvider);
     // 🔥 TON CODE EXISTANT (RIEN TOUCHÉ)
     final int? partyId = ref.watch(activePartyIdProvider);
 
@@ -1339,39 +1395,91 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _bigStatCard(
-                "Visiteurs",
-                value: lastKnownClienteleCount,
-                Icons.group,
-                Colors.blue,
-                onTap: () => setState(() => selectedIndex = 6),
-              ),
-              _bigStatCard(
-                "Posts",
-                value: effectivePostsCount,
-                Icons.photo,
-                Colors.purple,
-                onTap: () => setState(() => selectedIndex = 7),
-              ),
-              _bigStatCard(
-                "Notes",
-                value: notesCount,
-                Icons.star,
-                Colors.orange,
-                onTap: () => setState(() => selectedIndex = 8),
-              ),
-              _bigStatCard(
-                "Engagement",
-                value: engagementCount,
-                Icons.show_chart,
-                Colors.green,
-                onTap: () => setState(() => selectedIndex = 9),
-              ),
-            ],
+          _heroSection(placePhotoUrl),
+          const SizedBox(height: 30),
+          // Wrap(
+          //   spacing: 12,
+          //   runSpacing: 12,
+          //   children: [
+          //     _bigStatCard(
+          //       "Visiteurs",
+          //       value: lastKnownClienteleCount,
+          //       Icons.group,
+          //       Colors.blue,
+          //       onTap: () => setState(() => selectedIndex = 6),
+          //     ),
+          //     _bigStatCard(
+          //       "Posts",
+          //       value: effectivePostsCount,
+          //       Icons.photo,
+          //       Colors.purple,
+          //       onTap: () => setState(() => selectedIndex = 7),
+          //     ),
+          //     _bigStatCard(
+          //       "Notes",
+          //       value: notesCount,
+          //       Icons.star,
+          //       Colors.orange,
+          //       onTap: () => setState(() => selectedIndex = 8),
+          //     ),
+          //     _bigStatCard(
+          //       "Engagement",
+          //       value: engagementCount,
+          //       Icons.show_chart,
+          //       Colors.green,
+          //       onTap: () => setState(() => selectedIndex = 9),
+          //     ),
+          //   ],
+          // ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              int crossAxisCount = 1;
+
+              if (constraints.maxWidth > 1200) {
+                crossAxisCount = 4;
+              } else if (constraints.maxWidth > 800) {
+                crossAxisCount = 2;
+              }
+
+              return GridView.count(
+                crossAxisCount: crossAxisCount,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.8,
+                children: [
+                  _bigStatCard(
+                    "Visiteurs",
+                    Icons.group,
+                    Colors.blue,
+                    value: lastKnownClienteleCount,
+                    onTap: () => setState(() => selectedIndex = 6),
+                  ),
+                  _bigStatCard(
+                    "Posts",
+                    Icons.photo,
+                    Colors.purple,
+                    value: effectivePostsCount,
+                    onTap: () => setState(() => selectedIndex = 7),
+                  ),
+                  _bigStatCard(
+                    "Notes",
+                    Icons.star,
+                    Colors.orange,
+                    value: notesCount,
+                    onTap: () => setState(() => selectedIndex = 8),
+                  ),
+                  _bigStatCard(
+                    "Engagement",
+                    Icons.show_chart,
+                    Colors.green,
+                    value: engagementCount,
+                    onTap: () => setState(() => selectedIndex = 9),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 25),
           _infoCard(
@@ -1491,189 +1599,268 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   ///////////////////////////////////////////////
+  Widget _modernSidebar(bool isLarge) {
+    final admin = ref.watch(adminProvider);
+    final adminPhotoUrl = admin?.photoUrl;
+    final adminName = admin?.name ?? "Admin";
 
-  // Widget _topNavigationBar(bool isLarge) {
-  //   final placePhotoUrl = ref.watch(placePhotoProvider);
-  //   return Container(
-  //     width: double.infinity,
-  //     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 35),
-  //     child: Row(
-  //       crossAxisAlignment: CrossAxisAlignment.center,
-  //       children: [
-  //         /// ===== GAUCHE : MENU + LOGO (MOBILE) =====
-  //         if (!isLarge) ...[
-  //           Builder(
-  //             builder: (context) => IconButton(
-  //               icon: const Icon(Icons.menu, color: Colors.white),
-  //               onPressed: () {
-  //                 Scaffold.of(context).openDrawer();
-  //               },
-  //             ),
-  //           ),
-  //           const SizedBox(width: 8),
-  //           Container(
-  //             width: 60,
-  //             height: 40,
-  //             decoration: BoxDecoration(
-  //               borderRadius: BorderRadius.circular(12),
-  //               color: Colors.grey.shade800,
-  //             ),
-  //             // child: placePhotoUrl == null
-  //             //     ? const Icon(Icons.place, color: Colors.white)
-  //             //     : ClipRRect(
-  //             //         borderRadius: BorderRadius.circular(12),
-  //             //         child: Image.network(placePhotoUrl!, fit: BoxFit.cover),
-  //             //       ),
-  //             child: (placePhotoUrl == null || placePhotoUrl.isEmpty)
-  //                 ? const Icon(Icons.home_filled, color: Colors.white)
-  //                 : ClipRRect(
-  //                     borderRadius: BorderRadius.circular(12),
-  //                     child: Image.network(
-  //                       placePhotoUrl,
-  //                       fit: BoxFit.cover,
-  //                       errorBuilder: (_, __, ___) {
-  //                         return const Icon(Icons.place, color: Colors.white);
-  //                       },
-  //                     ),
-  //                   ),
-  //           ),
-  //         ],
-
-  //         /// pousse le contenu droit vers la droite
-  //         const Spacer(),
-  //         if (selectedCloseTime != null && selectedOpenTime != null) ...[
-  //           SizedBox(
-  //             height: 30,
-  //             width: 170,
-  //             child: Marquee(
-  //               text:
-  //                   "🟢 Ouverture ${_formatHourFR(selectedOpenTime!)} ${_formatDateFR(selectedOpenTime!)}     |     "
-  //                   "🔴 Fermeture ${_formatHourFR(selectedCloseTime!)} ${_formatDateFR(selectedCloseTime!)}",
-  //               style: const TextStyle(color: Colors.white, fontSize: 14),
-  //               scrollAxis: Axis.horizontal,
-  //               blankSpace: 40,
-  //               velocity: 40,
-  //               pauseAfterRound: const Duration(seconds: 1),
-  //               startPadding: 10,
-  //               accelerationDuration: const Duration(milliseconds: 500),
-  //               accelerationCurve: Curves.easeIn,
-  //               decelerationDuration: const Duration(milliseconds: 500),
-  //               decelerationCurve: Curves.easeOut,
-  //             ),
-  //           ),
-  //           const SizedBox(width: 20),
-  //         ],
-
-  //         /// ===== STATUT + ADMIN =====
-  //         Row(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             Text(
-  //               isOpen ? "Ouvert" : "",
-  //               style: TextStyle(
-  //                 color: isOpen ? Colors.green : Colors.red,
-  //                 fontSize: 20,
-  //                 fontWeight: FontWeight.bold,
-  //               ),
-  //             ),
-  //             const SizedBox(width: 8),
-  //             const CircleAvatar(radius: 18, backgroundColor: Colors.grey),
-  //             const SizedBox(width: 8),
-  //             _actionButton(),
-  //           ],
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  Widget _topNavigationBar(bool isLarge) {
-    final placePhotoUrl = ref.watch(placePhotoProvider);
-
-    return SafeArea(
-      bottom: false, // protège uniquement le haut
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            /// ===== GAUCHE : MENU + LOGO (MOBILE) =====
-            if (!isLarge) ...[
-              Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.white),
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                ),
+    return Container(
+      width: 260,
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
+      decoration: const BoxDecoration(color: Color(0xFF111827)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: Colors.grey.shade800,
+                backgroundImage: adminPhotoUrl != null
+                    ? NetworkImage(adminPhotoUrl)
+                    : null,
+                child: adminPhotoUrl == null
+                    ? const Icon(Icons.person, color: Colors.white)
+                    : null,
               ),
-              const SizedBox(width: 8),
-              Container(
-                width: 60,
-                height: 40,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey.shade800,
-                ),
-                child: (placePhotoUrl == null || placePhotoUrl.isEmpty)
-                    ? const Icon(Icons.home_filled, color: Colors.white)
-                    : AdaptiveNetworkImage(
-                        imageUrl: placePhotoUrl,
-                        placeholderIcon: Icons.place,),
-              ),
-            ],
 
-            const Spacer(),
+              const SizedBox(width: 12),
 
-            /// ===== MARQUEE HEURES =====
-            if (selectedCloseTime != null && selectedOpenTime != null) ...[
-              SizedBox(
-                height: 30,
-                width: isLarge ? 280 : 170,
-                child: Marquee(
-                  text:
-                      "🟢 Ouverture ${_formatHourFR(selectedOpenTime!)} ${_formatDateFR(selectedOpenTime!)}     |     "
-                      "🔴 Fermeture ${_formatHourFR(selectedCloseTime!)} ${_formatDateFR(selectedCloseTime!)}",
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                  scrollAxis: Axis.horizontal,
-                  blankSpace: 40,
-                  velocity: 40,
-                  pauseAfterRound: const Duration(seconds: 1),
-                  startPadding: 10,
-                  accelerationDuration: const Duration(milliseconds: 500),
-                  accelerationCurve: Curves.easeIn,
-                  decelerationDuration: const Duration(milliseconds: 500),
-                  decelerationCurve: Curves.easeOut,
-                ),
-              ),
-              const SizedBox(width: 20),
-            ],
-
-            /// ===== STATUT + ADMIN =====
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  isOpen ? "Ouvert" : "",
-                  style: TextStyle(
-                    color: isOpen ? Colors.green : Colors.red,
-                    fontSize: 20,
+              Expanded(
+                child: Text(
+                  adminName,
+                  style: const TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 8),
-                const CircleAvatar(radius: 18, backgroundColor: Colors.grey),
-                const SizedBox(width: 8),
-                _actionButton(),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 40),
+
+          _modernMenuItem("Accueil", Icons.dashboard_outlined, 0),
+          _modernMenuItem("Historiques", Icons.history, 1),
+          _modernMenuItem("Membres", Icons.people_outline, 2),
+          _modernMenuItem("Promotions", Icons.local_offer_outlined, 3),
+          _modernMenuItem("Menus", Icons.menu_book_outlined, 4),
+          _modernMenuItem("Evenements", Icons.event_available, 0),
+
+          const Spacer(),
+
+          _modernMenuItem("Paramètres", Icons.settings_outlined, 5),
+        ],
       ),
     );
   }
 
+  // Widget _modernSidebar(bool isLarge) {
+  //   final adminAsync = ref.watch(adminFutureProvider);
+
+  //   return adminAsync.when(
+  //     loading: () => const Center(child: CircularProgressIndicator()),
+  //     error: (e, _) => const Text("Erreur admin"),
+  //     data: (admin) {
+  //       return Container(
+  //         width: 260,
+  //         padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
+  //         decoration: const BoxDecoration(color: Color(0xFF111827)),
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Row(
+  //               children: [
+  //                 CircleAvatar(
+  //                   radius: 28,
+  //                   backgroundColor: Colors.grey.shade800,
+  //                   backgroundImage: admin.photoUrl != null
+  //                       ? NetworkImage(admin.photoUrl!)
+  //                       : null,
+  //                   child: admin.photoUrl == null
+  //                       ? const Icon(Icons.person, color: Colors.white)
+  //                       : null,
+  //                 ),
+  //                 const SizedBox(width: 12),
+  //                 Expanded(
+  //                   child: Text(
+  //                     admin.name,
+  //                     style: const TextStyle(
+  //                       fontSize: 16,
+  //                       fontWeight: FontWeight.bold,
+  //                       color: Colors.white,
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+
+  //             const SizedBox(height: 40),
+
+  //             _modernMenuItem("Accueil", Icons.dashboard_outlined, 0),
+  //             _modernMenuItem("Historiques", Icons.history, 1),
+  //             _modernMenuItem("Membres", Icons.people_outline, 2),
+  //             _modernMenuItem("Promotions", Icons.local_offer_outlined, 3),
+  //             _modernMenuItem("Menus", Icons.menu_book_outlined, 4),
+
+  //             const Spacer(),
+
+  //             _modernMenuItem("Paramètres", Icons.settings_outlined, 5),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+  // Widget _topNavigationBar(bool isLarge) {
+  //   final placePhotoUrl = ref.watch(placePhotoProvider);
+
+  //   return SafeArea(
+  //     bottom: false, // protège uniquement le haut
+  //     child: Container(
+  //       width: double.infinity,
+  //       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+  //       child: Row(
+  //         crossAxisAlignment: CrossAxisAlignment.center,
+  //         children: [
+  //           /// ===== GAUCHE : MENU + LOGO (MOBILE) =====
+  //           if (!isLarge) ...[
+  //             Builder(
+  //               builder: (context) => IconButton(
+  //                 icon: const Icon(Icons.menu, color: Colors.white),
+  //                 onPressed: () {
+  //                   Scaffold.of(context).openDrawer();
+  //                 },
+  //               ),
+  //             ),
+  //             const SizedBox(width: 8),
+  //             Container(
+  //               width: 60,
+  //               height: 40,
+  //               decoration: BoxDecoration(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 color: Colors.grey.shade800,
+  //               ),
+  //               child: (placePhotoUrl == null || placePhotoUrl.isEmpty)
+  //                   ? const Icon(Icons.home_filled, color: Colors.white)
+  //                   : AdaptiveNetworkImage(
+  //                       imageUrl: placePhotoUrl,
+  //                       placeholderIcon: Icons.place,
+  //                     ),
+  //             ),
+  //           ],
+
+  //           const Spacer(),
+
+  //           /// ===== MARQUEE HEURES =====
+  //           if (selectedCloseTime != null && selectedOpenTime != null) ...[
+  //             SizedBox(
+  //               height: 30,
+  //               width: isLarge ? 280 : 170,
+  //               child: Marquee(
+  //                 text:
+  //                     "🟢 Ouverture ${_formatHourFR(selectedOpenTime!)} ${_formatDateFR(selectedOpenTime!)}     |     "
+  //                     "🔴 Fermeture ${_formatHourFR(selectedCloseTime!)} ${_formatDateFR(selectedCloseTime!)}",
+  //                 style: const TextStyle(color: Colors.white, fontSize: 14),
+  //                 scrollAxis: Axis.horizontal,
+  //                 blankSpace: 40,
+  //                 velocity: 40,
+  //                 pauseAfterRound: const Duration(seconds: 1),
+  //                 startPadding: 10,
+  //                 accelerationDuration: const Duration(milliseconds: 500),
+  //                 accelerationCurve: Curves.easeIn,
+  //                 decelerationDuration: const Duration(milliseconds: 500),
+  //                 decelerationCurve: Curves.easeOut,
+  //               ),
+  //             ),
+  //             const SizedBox(width: 20),
+  //           ],
+
+  //           /// ===== STATUT + ADMIN =====
+  //           Row(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Text(
+  //                 isOpen ? "Ouvert" : "",
+  //                 style: TextStyle(
+  //                   color: isOpen ? Colors.green : Colors.red,
+  //                   fontSize: 20,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //               const SizedBox(width: 8),
+  //               const CircleAvatar(radius: 18, backgroundColor: Colors.grey),
+  //               const SizedBox(width: 8),
+  //               _actionButton(),
+  //             ],
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   /////////////////////////////////////
+  Widget _heroSection(String? imageUrl) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Stack(
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 6,
+            child: imageUrl == null || imageUrl.isEmpty
+                ? Container(
+                    color: Colors.grey.shade900,
+                    child: const Icon(Icons.image, size: 60),
+                  )
+                : AdaptiveNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover),
+          ),
+
+          // Overlay gradient
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.center,
+                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+
+          // Texte sur l'image
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  placeName,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  isOpen ? "Ouvert" : "Fermé",
+                  style: TextStyle(
+                    color: isOpen ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // =============================================================
   //   CARD STATISTIQUE
   // =============================================================
@@ -1695,8 +1882,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             height: 120,
             margin: const EdgeInsets.symmetric(horizontal: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(14),
+              color: const Color(0xFF1C1F26),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

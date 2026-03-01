@@ -1,3 +1,4 @@
+import 'package:cheza_app/features/auth/domain/entities/admin_entity.dart';
 import 'package:cheza_app/features/dashboard/data/datasources/dashboard_supabase_data_source.dart';
 import 'package:cheza_app/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:cheza_app/features/dashboard/domain/entities/dashboard_snapshot.dart';
@@ -42,7 +43,9 @@ final closePartyUseCaseProvider = Provider(
 final createPartyUseCaseProvider = Provider(
   (ref) => CreatePartyUseCase(ref.read(dashboardRepositoryProvider)),
 );
-
+final adminFutureProvider = FutureProvider<AdminEntity>((ref) async {
+  return ref.read(dashboardRepositoryProvider).fetchMyAdmin();
+});
 final activePartyIdProvider = StateProvider<int?>((ref) => null);
 final placePhotoProvider = StateProvider<String?>((ref) => null);
 

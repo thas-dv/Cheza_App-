@@ -1,3 +1,4 @@
+import 'package:cheza_app/features/auth/domain/entities/admin_entity.dart';
 import 'package:cheza_app/features/dashboard/domain/entities/dashboard_snapshot.dart';
 import 'package:cheza_app/features/dashboard/domain/entities/dashboard_stats.dart';
 import 'package:cheza_app/features/dashboard/domain/entities/party_summary.dart';
@@ -16,5 +17,6 @@ abstract class DashboardRepository {
     required DateTime closedAt,
   });
   Future<List<PartySummary>> fetchClosedParties(int placeId);
+  Future<AdminEntity> fetchMyAdmin();
   Future<DashboardSnapshot> loadDashboardSnapshot();
 }

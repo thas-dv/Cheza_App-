@@ -1,4 +1,4 @@
-
+import 'package:cheza_app/features/auth/domain/entities/admin_entity.dart';
 import 'package:cheza_app/features/dashboard/data/datasources/dashboard_supabase_data_source.dart';
 import 'package:cheza_app/features/dashboard/data/models/party_summary_model.dart';
 import 'package:cheza_app/features/dashboard/domain/entities/dashboard_snapshot.dart';
@@ -82,7 +82,24 @@ class DashboardRepositoryImpl implements DashboardRepository {
   @override
   Future<List<PartySummary>> fetchClosedParties(int placeId) async {
     final json = await _dataSource.fetchClosedParties(placeId);
-    return json.map((item) => PartySummaryModel.fromJson(item).toEntity()).toList();
+    return json
+        .map((item) => PartySummaryModel.fromJson(item).toEntity())
+        .toList();
+  }
+
+  @override
+  Future<AdminEntity> fetchMyAdmin() async {
+    final profile = await _dataSource.fetchMyAdminProfile();
+
+    if (profile == null) {
+      throw Exception("Profil admin introuvable");
+    }
+
+    return AdminEntity(
+      id: profile['id'] as int,
+      name: (profile['name'] ?? "Admin") as String,
+      photoUrl: profile['photo_url'] as String?,
+    );
   }
 
   @override
