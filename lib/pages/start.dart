@@ -2,6 +2,7 @@ import 'package:cheza_app/themes/app_colors.dart';
 import 'package:cheza_app/widgets/network_aware_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:cheza_app/pages/login.dart';
+import 'package:cheza_app/core/ui/responsive_layout.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -79,9 +80,13 @@ class _WelcomePageState extends State<WelcomePage>
     return NetworkToastWrapper(
       child: Scaffold(
         backgroundColor: AppColors.backgroundDark,
-        body: _buildStackContent(
-          MediaQuery.of(context).size.width > 900 &&
-              MediaQuery.of(context).size.height > 600,
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop =
+                Breakpoints.isDesktop(constraints.maxWidth) &&
+                constraints.maxHeight > 600;
+            return _buildStackContent(isDesktop);
+          },
         ),
       ),
     );

@@ -1185,7 +1185,7 @@ class _PromotionCard extends StatelessWidget {
               TextButton.icon(
                 onPressed: onAssing,
                 icon: const Icon(Icons.attribution, size: 18),
-                label: const Text('Attribuer'),
+                label: const Text('Vainqueurs'),
               ),
             ],
           ),

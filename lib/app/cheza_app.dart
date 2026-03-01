@@ -2,7 +2,7 @@ import 'package:cheza_app/features/auth/presentation/pages/auth_gate_page.dart';
 import 'package:cheza_app/features/auth/domain/usecases/get_startup_destination_usecase.dart';
 import 'package:cheza_app/themes/app_colors.dart';
 import 'package:flutter/material.dart';
-
+import 'package:cheza_app/themes/design_system.dart';
 class ChezaApp extends StatelessWidget {
   const ChezaApp({required this.getStartupDestination, super.key});
 
@@ -14,6 +14,7 @@ class ChezaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
+        useMaterial3: true,
         scaffoldBackgroundColor: AppColors.background,
         colorScheme: const ColorScheme.dark().copyWith(
           primary: AppColors.neonPurple,
@@ -39,7 +40,7 @@ class ChezaApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 28),
+padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.lg),
           ),
         ),
       ),

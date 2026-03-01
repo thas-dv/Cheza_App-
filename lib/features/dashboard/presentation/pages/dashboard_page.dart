@@ -2,7 +2,8 @@
 
 import 'dart:async';
 import 'dart:ui';
-
+import 'package:cheza_app/core/ui/responsive_layout.dart';
+import 'package:cheza_app/widgets/adaptive_network_image.dart';
 import 'package:cheza_app/features/dashboard/domain/entities/dashboard_stats.dart';
 import 'package:cheza_app/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/promotion_tab.dart';
@@ -353,8 +354,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: SizedBox(
-                width: 380,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 380),
                 child: Padding(
                   padding: const EdgeInsets.all(18),
                   child: Column(
@@ -473,8 +474,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: SizedBox(
-                width: 420, // largeur contrôlée
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 420,
+                ), // largeur contrôlée
                 child: Padding(
                   padding: const EdgeInsets.all(18),
                   child: Column(
@@ -715,7 +718,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isLarge = constraints.maxWidth > 900;
+        final isLarge = Breakpoints.isDesktop(constraints.maxWidth);
         // =======================
         // RIVERPOD (LEGACY)
         // =======================
@@ -804,7 +807,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   // ===== DRAWER FIXE DESKTOP =====
                   if (isLarge)
                     Container(
-                      width: 250,
+                      width: 280,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
@@ -836,10 +839,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
-                                          child: Image.network(
-                                            placePhotoUrl,
-                                            key: ValueKey(placePhotoUrl),
+                                          child: AdaptiveNetworkImage(
+                                            imageUrl: placePhotoUrl,
                                             fit: BoxFit.cover,
+                                            placeholderIcon: Icons.place,
                                           ),
                                         ),
                                 ),
@@ -1336,7 +1339,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
             children: [
               _bigStatCard(
                 "Visiteurs",
@@ -1396,18 +1401,22 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 15,
+            runSpacing: 10,
             children: [
               Text(
                 placeName,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 42,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 15),
+
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
@@ -1430,44 +1439,47 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
           const SizedBox(height: 60),
 
-          Container(
-            width: 500,
-            padding: const EdgeInsets.symmetric(vertical: 60),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundDark,
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
-            ),
-            child: Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6A5AE0), Color(0xFFB44CFF)],
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 60),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundDark,
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6A5AE0), Color(0xFFB44CFF)],
+                    ),
+                    borderRadius: BorderRadius.circular(50),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFB44CFF).withOpacity(0.6),
+                        blurRadius: 30,
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(50),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFB44CFF).withOpacity(0.6),
-                      blurRadius: 30,
+                  child: ElevatedButton(
+                    onPressed: openPartyDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 80,
+                        vertical: 24,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
                     ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: openPartyDialog,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 80,
-                      vertical: 24,
+                    child: const Text(
+                      "Ouvrir le Lieu",
+                      style: TextStyle(fontSize: 20, color: Colors.white),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                  ),
-                  child: const Text(
-                    "Ouvrir le Lieu",
-                    style: TextStyle(fontSize: 20, color: Colors.white),
                   ),
                 ),
               ),
@@ -1605,16 +1617,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
                 child: (placePhotoUrl == null || placePhotoUrl.isEmpty)
                     ? const Icon(Icons.home_filled, color: Colors.white)
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          placePhotoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
-                            return const Icon(Icons.place, color: Colors.white);
-                          },
-                        ),
-                      ),
+                    : AdaptiveNetworkImage(
+                        imageUrl: placePhotoUrl,
+                        placeholderIcon: Icons.place,),
               ),
             ],
 
@@ -1624,7 +1629,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             if (selectedCloseTime != null && selectedOpenTime != null) ...[
               SizedBox(
                 height: 30,
-                width: 170,
+                width: isLarge ? 280 : 170,
                 child: Marquee(
                   text:
                       "🟢 Ouverture ${_formatHourFR(selectedOpenTime!)} ${_formatDateFR(selectedOpenTime!)}     |     "
@@ -1679,7 +1684,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     required int value,
     required VoidCallback onTap,
   }) {
-    return Expanded(
+    return SizedBox(
+      width: 220,
       child: Opacity(
         opacity: isOpen ? 1 : 0.4,
         child: InkWell(
