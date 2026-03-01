@@ -178,7 +178,7 @@ class PromotionsPage extends ConsumerWidget {
     bool forEveryone = promotion.forEveryone;
     DateTime startDate = promotion.dateStart;
     DateTime endDate = promotion.dateEnd;
-
+    bool isEditing = false;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -197,6 +197,7 @@ class PromotionsPage extends ConsumerWidget {
               if (pickedDate == null) return;
 
               final pickedTime = await showTimePicker(
+                // ignore: use_build_context_synchronously
                 context: dialogContext,
                 initialTime: TimeOfDay.fromDateTime(initial),
               );
@@ -225,7 +226,7 @@ class PromotionsPage extends ConsumerWidget {
                 horizontal: 20,
                 vertical: 24,
               ),
-              backgroundColor: const Color(0xFF1E1E1E),
+              backgroundColor: AppColors.background,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: 600,
@@ -331,40 +332,81 @@ class PromotionsPage extends ConsumerWidget {
                           ),
                           const SizedBox(width: 10),
                           ElevatedButton(
-                            onPressed: () async {
-                              if (!formKey.currentState!.validate()) return;
+                            onPressed: isEditing
+                                ? null
+                                : () async {
+                                    if (!formKey.currentState!.validate())
+                                      return;
 
-                              if (endDate.isBefore(startDate)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'date_end doit être après date_start',
+                                    if (endDate.isBefore(startDate)) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'date_end doit être après date_start',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    setStateDialog(() {
+                                      isEditing = true;
+                                    });
+                                    try {
+                                      await ref
+                                          .read(
+                                            promotionsActionProvider.notifier,
+                                          )
+                                          .updatePromo(
+                                            promoId: promotion.id,
+                                            description: descCtrl.text.trim(),
+                                            unlimited: forEveryone,
+                                            limit: forEveryone
+                                                ? null
+                                                : int.tryParse(limitCtrl.text),
+                                            dateStart: startDate,
+                                            dateEnd: endDate,
+                                          );
+
+                                      if (!context.mounted) return;
+
+                                      Navigator.pop(dialogContext);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Promotion modifiée avec succès.',
+                                          ),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Erreur lors de la modification.',
+                                          ),
+                                        ),
+                                      );
+                                    } finally {
+                                      setStateDialog(() {
+                                        isEditing = false;
+                                      });
+                                    }
+                                  },
+                            child: isEditing
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
                                     ),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              try {
-                                await ref
-                                    .read(promotionsActionProvider.notifier)
-                                    .updatePromo(
-                                      promoId: promotion.id,
-                                      description: descCtrl.text.trim(),
-                                      unlimited: forEveryone,
-                                      limit: forEveryone
-                                          ? null
-                                          : int.tryParse(limitCtrl.text),
-                                      dateStart: startDate,
-                                      dateEnd: endDate,
-                                    );
-
-                                if (!context.mounted) return;
-
-                                Navigator.pop(dialogContext);
-                              } catch (_) {}
-                            },
-                            child: const Text('Enregistrer'),
+                                  )
+                                : Text('Enregistrer'),
                           ),
                         ],
                       ),
@@ -384,38 +426,81 @@ class PromotionsPage extends ConsumerWidget {
     WidgetRef ref,
     PromotionEntity promotion,
   ) async {
+    bool isDelete = false;
+
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text(
-          'Supprimer la promo ?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'Voulez-vous supprimer "${promotion.description}" ?',
-          style: const TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              try {
-                await ref
-                    .read(promotionsActionProvider.notifier)
-                    .deletePromo(promoId: promotion.id);
-                if (!context.mounted) return;
-                Navigator.pop(dialogContext);
-              } catch (_) {}
-            },
-            child: const Text('Supprimer'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E1E1E),
+              title: const Text(
+                'Supprimer la promo ?',
+                style: TextStyle(color: Colors.white),
+              ),
+              content: Text(
+                'Voulez-vous supprimer "${promotion.description}" ?',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isDelete
+                      ? null
+                      : () => Navigator.pop(dialogContext),
+                  child: const Text('Annuler'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  onPressed: isDelete
+                      ? null
+                      : () async {
+                          setStateDialog(() {
+                            isDelete = true;
+                          });
+
+                          try {
+                            await ref
+                                .read(promotionsActionProvider.notifier)
+                                .deletePromo(promoId: promotion.id);
+
+                            Navigator.pop(dialogContext);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Promotion supprimée avec succès.',
+                                ),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Erreur lors de la suppression.'),
+                              ),
+                            );
+
+                            setStateDialog(() {
+                              isDelete = false;
+                            });
+                          }
+                        },
+                  child: isDelete
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Supprimer'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -427,6 +512,7 @@ class PromotionsPage extends ConsumerWidget {
     final descCtrl = TextEditingController();
     final limitCtrl = TextEditingController();
     bool forEveryone = true;
+    bool isSaving = false;
     DateTime startDate = DateTime.now();
     DateTime endDate = DateTime.now().add(const Duration(days: 7));
 
@@ -582,57 +668,87 @@ class PromotionsPage extends ConsumerWidget {
                           ),
                           const SizedBox(width: 10),
                           ElevatedButton(
-                            onPressed: () async {
-                              if (!formKey.currentState!.validate()) return;
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    if (!formKey.currentState!.validate())
+                                      return;
 
-                              if (endDate.isBefore(startDate)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'date_end doit être après date_start',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              final partyId = activePartyId;
-                              if (partyId == null) return;
-
-                              try {
-                                final promoId = await ref
-                                    .read(promotionsActionProvider.notifier)
-                                    .createAndAttachPromo(
-                                      description: descCtrl.text.trim(),
-                                      unlimited: forEveryone,
-                                      limit: forEveryone
-                                          ? null
-                                          : int.tryParse(limitCtrl.text),
-                                      dateStart: startDate,
-                                      dateEnd: endDate,
-                                      partyId: partyId,
-                                    );
-
-                                if (!context.mounted) return;
-
-                                Navigator.pop(dialogContext);
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Promo créée.'),
-                                    action: SnackBarAction(
-                                      label: 'Ajouter articles',
-                                      onPressed: () => _openAddPromoItemDialog(
+                                    if (endDate.isBefore(startDate)) {
+                                      ScaffoldMessenger.of(
                                         context,
-                                        ref,
-                                        promoId,
-                                      ),
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'date_end doit être après date_start',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    final partyId = activePartyId;
+                                    if (partyId == null) return;
+
+                                    setStateDialog(() {
+                                      isSaving = true;
+                                    });
+
+                                    try {
+                                      await ref
+                                          .read(
+                                            promotionsActionProvider.notifier,
+                                          )
+                                          .createAndAttachPromo(
+                                            description: descCtrl.text.trim(),
+                                            unlimited: forEveryone,
+                                            limit: forEveryone
+                                                ? null
+                                                : int.tryParse(limitCtrl.text),
+                                            dateStart: startDate,
+                                            dateEnd: endDate,
+                                            partyId: partyId,
+                                          );
+
+                                      if (!context.mounted) return;
+
+                                      Navigator.pop(dialogContext);
+
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Promotion créée avec succès.',
+                                          ),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Erreur lors de la création',
+                                          ),
+                                        ),
+                                      );
+                                    } finally {
+                                      setStateDialog(() {
+                                        isSaving = false;
+                                      });
+                                    }
+                                  },
+                            child: isSaving
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
                                     ),
-                                  ),
-                                );
-                              } catch (_) {}
-                            },
-                            child: const Text('Enregistrer'),
+                                  )
+                                : const Text('Enregistrer'),
                           ),
                         ],
                       ),
@@ -663,7 +779,7 @@ class PromotionsPage extends ConsumerWidget {
             horizontal: 20,
             vertical: 24,
           ),
-          backgroundColor: const Color(0xFF1E1E1E),
+          backgroundColor: AppColors.background,
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: 600,
@@ -735,7 +851,7 @@ class _AddPromoItemContentState extends ConsumerState<_AddPromoItemContent> {
   bool isFreeOffer = true;
   String discountType = 'Pourcentage';
   final valueCtrl = TextEditingController();
-
+  bool isLoading = false;
   @override
   void initState() {
     super.initState();
@@ -762,6 +878,7 @@ class _AddPromoItemContentState extends ConsumerState<_AddPromoItemContent> {
 
         /// MENU
         DropdownButtonFormField<MenuEntity>(
+          dropdownColor: AppColors.backgroundDark,
           value: selectedMenu,
           items: widget.menus
               .map(
@@ -796,6 +913,7 @@ class _AddPromoItemContentState extends ConsumerState<_AddPromoItemContent> {
               selectedItem ??= items.first;
 
               return DropdownButtonFormField<MenuItemOptionEntity>(
+                dropdownColor: AppColors.backgroundDark,
                 value: selectedItem,
                 items: items
                     .map(
@@ -820,9 +938,10 @@ class _AddPromoItemContentState extends ConsumerState<_AddPromoItemContent> {
           title: const Text('Offre gratuite'),
           onChanged: (value) => setState(() => isFreeOffer = value ?? true),
         ),
-
+        const SizedBox(height: 10),
         if (!isFreeOffer) ...[
           DropdownButtonFormField<String>(
+            dropdownColor: AppColors.backgroundDark,
             value: discountType,
             items: const [
               DropdownMenuItem(
@@ -844,43 +963,56 @@ class _AddPromoItemContentState extends ConsumerState<_AddPromoItemContent> {
 
         const Spacer(),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
-            ),
-            const SizedBox(width: 10),
-            ElevatedButton(
-              onPressed: () async {
-                if (selectedItem == null) return;
+        ElevatedButton(
+          onPressed: isLoading
+              ? null
+              : () async {
+                  if (selectedItem == null) return;
 
-                final discountValue = double.tryParse(
-                  valueCtrl.text.replaceAll(',', '.'),
-                );
+                  final discountValue = double.tryParse(
+                    valueCtrl.text.replaceAll(',', '.'),
+                  );
 
-                if (!isFreeOffer &&
-                    (discountValue == null || discountValue <= 0)) {
-                  return;
-                }
+                  if (!isFreeOffer &&
+                      (discountValue == null || discountValue <= 0)) {
+                    return;
+                  }
 
-                await widget.ref
-                    .read(promotionsActionProvider.notifier)
-                    .addItemToPromo(
-                      promoId: widget.promoId,
-                      itemId: selectedItem!.id,
-                      isFreeOffer: isFreeOffer,
-                      discountType: isFreeOffer ? null : discountType,
-                      discountValue: isFreeOffer ? null : discountValue,
-                    );
+                  setState(() {
+                    isLoading = true;
+                  });
 
-                if (!context.mounted) return;
-                Navigator.pop(context);
-              },
-              child: const Text('Ajouter'),
-            ),
-          ],
+                  try {
+                    await widget.ref
+                        .read(promotionsActionProvider.notifier)
+                        .addItemToPromo(
+                          promoId: widget.promoId,
+                          itemId: selectedItem!.id,
+                          isFreeOffer: isFreeOffer,
+                          discountType: isFreeOffer ? null : discountType,
+                          discountValue: isFreeOffer ? null : discountValue,
+                        );
+
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        isLoading = false;
+                      });
+                    }
+                  }
+                },
+          child: isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Ajouter'),
         ),
       ],
     );
@@ -1015,7 +1147,8 @@ class _PromotionCard extends StatelessWidget {
                                 ? 'Gratuit'
                                 : item.discountType == 'Pourcentage'
                                 ? '-${item.discountValue?.toStringAsFixed(0) ?? '0'}%'
-                                : '-${_formatGNF(item.discountValue ?? 0)}',
+                                // ignore: unnecessary_string_interpolations
+                                : '${_formatGNF(item.discountValue ?? 0)}',
                             style: const TextStyle(
                               color: AppColors.neonBlue,
                               fontWeight: FontWeight.bold,

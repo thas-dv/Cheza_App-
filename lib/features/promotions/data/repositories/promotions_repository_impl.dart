@@ -5,8 +5,8 @@ import 'package:cheza_app/features/promotions/domain/repositories/promotions_rep
 class PromotionsRepositoryImpl implements PromotionsRepository {
    String? _normalizeDiscountType(String? type) {
     return switch (type) {
-      'Pourcentage' => 'percentage',
-      'Montant' => 'amount',
+      'Pourcentage' => 'Pourcentage',
+      'Montant' => 'Montant',
       _ => type,
     };
   }

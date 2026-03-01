@@ -619,7 +619,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                       await LocalPartyStorage.setPartyOpen(
                                         true,
                                       );
-                                       if (!mounted || !context.mounted) return;
+                                      if (!mounted || !context.mounted) return;
                                       // ✅ MISE À JOUR UI
                                       setState(() {
                                         isOpen = true;
@@ -785,6 +785,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       _menuItem("Membres", Icons.person, 2, isLarge),
                       _menuItem("Promotions", Icons.propane_tank, 3, isLarge),
                       _menuItem("Menus", Icons.menu_book, 4, isLarge),
+                      _menuItem("Evenements", Icons.menu_book, 4, isLarge),
                       const Spacer(),
                       Row(
                         children: [
@@ -877,6 +878,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                             isLarge,
                           ),
                           _menuItem("Menus", Icons.menu_book, 4, isLarge),
+                          _menuItem("Evenement", Icons.menu_book, 4, isLarge),
                           const Spacer(),
                           _menuItem("Paramètres", Icons.settings, 5, isLarge),
                           const SizedBox(height: 20),
@@ -922,7 +924,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ),
                 ],
               ),
-                bottomNavigationBar: isLarge
+              bottomNavigationBar: isLarge
                   ? null
                   : BottomNavigationBar(
                       type: BottomNavigationBarType.fixed,
@@ -957,7 +959,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       },
     );
   }
-//Index
+
+  //Index
   int get _mobileTabIndex {
     return switch (selectedIndex) {
       7 => 1,
@@ -967,7 +970,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       _ => 0,
     };
   }
-//Index Tap
+
+  //Index Tap
   void _onTapMobileNav(int index) {
     setState(() {
       selectedIndex = switch (index) {
@@ -1146,7 +1150,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         return const Text("Membres");
 
       case 3:
-       return PromotionPage(
+        return PromotionPage(
           placeId: placeId,
           activePartyId: activePartyId,
           placeName: placeName,

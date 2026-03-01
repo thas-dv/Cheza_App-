@@ -36,8 +36,8 @@ class PromotionsSupabaseDataSource {
     double? discountValue,
   }) async {
     final normalizedType = switch (discountType) {
-      'Pourcentage' => 'percentage',
-      'Montant' => 'amount',
+      'Pourcentage' => 'Pourcentage',
+      'Montant' => 'Montant',
       _ => discountType,
     };
     await _client.from('promo_items').insert({
