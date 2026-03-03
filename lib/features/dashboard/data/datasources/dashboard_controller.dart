@@ -47,10 +47,12 @@ class DashboardController extends StateNotifier<DashboardState> {
       state = state.copyWith(
         placeId: place.id,
         placeName: place.name,
-           placeImageUrl: _normalizeImageUrl(place.photoUrl),
+        placeImageUrl: _normalizeImageUrl(place.photoUrl),
         placeAddress: place.address,
         placeDescription: place.typePlace,
         adminName: admin.name,
+        placeOpenedFromDb: place.isOpened,
+        isOpen: place.isOpened,
       );
       await refreshActiveParty();
     } catch (_) {
@@ -71,7 +73,7 @@ class DashboardController extends StateNotifier<DashboardState> {
       ref.read(activePartyIdProvider.notifier).state = null;
       ref.read(dashboardStatsProvider.notifier).clear();
       state = state.copyWith(
-        isOpen: false,
+        isOpen: state.placeOpenedFromDb,
         activePartyId: null,
         partyName: '',
         openTime: null,
@@ -85,7 +87,7 @@ class DashboardController extends StateNotifier<DashboardState> {
     }
     ref.read(activePartyIdProvider.notifier).state = party.id;
     state = state.copyWith(
-      isOpen: true,
+      placeOpenedFromDb: true,
       activePartyId: party.id,
       partyName: party.name,
       openTime: party.dateStarted,
@@ -95,7 +97,8 @@ class DashboardController extends StateNotifier<DashboardState> {
     await _refreshStats(party.id);
     _setupRealtime(party.id);
   }
-//////////////////////////////////////////
+
+  //////////////////////////////////////////
   String? _normalizeImageUrl(String? rawUrl) {
     if (rawUrl == null) return null;
     final trimmed = rawUrl.trim();
@@ -125,17 +128,20 @@ class DashboardController extends StateNotifier<DashboardState> {
         );
 
         if (!closed) return false;
+        state = state.copyWith(isOpen: false, placeOpenedFromDb: false);
       } else {
         final createParty = ref.read(createPartyUseCaseProvider);
         final now = DateTime.now();
         final createdId = await createParty(
           placeId: state.placeId!,
-          name: 'Session ${state.placeName} - ${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}',
+          name:
+              'Session ${state.placeName} - ${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}',
           openedAt: now,
           closedAt: now.add(const Duration(hours: 12)),
         );
 
         if (createdId == null) return false;
+        state = state.copyWith(isOpen: true, placeOpenedFromDb: true);
       }
 
       await refreshActiveParty();
@@ -146,6 +152,7 @@ class DashboardController extends StateNotifier<DashboardState> {
       state = state.copyWith(isStatusUpdating: false);
     }
   }
+
   /////////////////////////////////////////////
   Future<void> _refreshStats(int partyId) async {
     final stats = await ref.read(loadDashboardStatsUseCaseProvider)(partyId);

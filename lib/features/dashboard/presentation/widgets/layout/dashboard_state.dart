@@ -9,6 +9,7 @@ class DashboardState {
   final DateTime? openTime;
   final DateTime? closeTime;
   final int visitors;
+    final bool placeOpenedFromDb;
   final int posts;
   final int selectedIndex;
   final bool isStatusUpdating;
@@ -19,6 +20,7 @@ class DashboardState {
   final int notes;
   final int engagement;
   const DashboardState({
+    this.placeOpenedFromDb = false,
     this.isLoading = true,
     this.hasNetworkError = false,
     this.isOpen = false,
@@ -41,6 +43,7 @@ class DashboardState {
   });
 
   DashboardState copyWith({
+    bool? placeOpenedFromDb,
     bool? isLoading,
     bool? hasNetworkError,
     bool? isOpen,
@@ -66,6 +69,7 @@ class DashboardState {
       hasNetworkError: hasNetworkError ?? this.hasNetworkError,
       isOpen: isOpen ?? this.isOpen,
       placeId: placeId ?? this.placeId,
+      placeOpenedFromDb: placeOpenedFromDb ?? this.placeOpenedFromDb,
       placeName: placeName ?? this.placeName,
       placeImageUrl: placeImageUrl ?? this.placeImageUrl,
       adminName: adminName ?? this.adminName,

@@ -9,8 +9,7 @@ class HeroPlaceCard extends StatelessWidget {
   final int posts;
   final int notes;
   final int engagement;
-  final bool isStatusUpdating;
-  final VoidCallback onToggleStatus;
+
   const HeroPlaceCard({
     super.key,
     required this.placeName,
@@ -21,13 +20,11 @@ class HeroPlaceCard extends StatelessWidget {
     required this.posts,
     required this.notes,
     required this.engagement,
-    required this.isStatusUpdating,
-    required this.onToggleStatus,
   });
 
   @override
   Widget build(BuildContext context) {
-      final isMobile = MediaQuery.of(context).size.width < 700;
+    final isMobile = MediaQuery.of(context).size.width < 700;
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: Stack(
@@ -72,39 +69,7 @@ class HeroPlaceCard extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            top: 16,
-            right: 16,
-            child: FilledButton.tonalIcon(
-              onPressed: isStatusUpdating ? null : onToggleStatus,
-              icon: isStatusUpdating
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      isOpen ? Icons.lock_outline : Icons.lock_open_outlined,
-                    ),
-              style: FilledButton.styleFrom(
-                backgroundColor: isOpen
-                    ? Colors.red.withOpacity(0.2)
-                    : Colors.green.withOpacity(0.2),
-                side: BorderSide(
-                  color: isOpen
-                      ? Colors.red.withOpacity(0.5)
-                      : Colors.green.withOpacity(0.5),
-                ),
-              ),
-              label: Text(
-                isOpen ? 'Fermer' : 'Ouvrir',
-                style: TextStyle(
-                  color: isOpen ? Colors.redAccent : Colors.greenAccent,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
+
           Positioned(
             left: 24,
             right: 24,
@@ -162,6 +127,7 @@ class HeroPlaceCard extends StatelessWidget {
     );
   }
 }
+
 class _StatBadge extends StatelessWidget {
   final String label;
   final String value;
@@ -182,7 +148,10 @@ class _StatBadge extends StatelessWidget {
         text: TextSpan(
           style: const TextStyle(color: Colors.white, fontSize: 12),
           children: [
-            TextSpan(text: '$label: ', style: const TextStyle(color: Colors.white70)),
+            TextSpan(
+              text: '$label: ',
+              style: const TextStyle(color: Colors.white70),
+            ),
             TextSpan(
               text: value,
               style: const TextStyle(fontWeight: FontWeight.w700),

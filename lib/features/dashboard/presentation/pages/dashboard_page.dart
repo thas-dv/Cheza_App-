@@ -2220,14 +2220,20 @@ import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/clientele
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/note_tab.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/posts_tab.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';
-
+import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/history_tab.dart';
+import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/menu_tab.dart';
+import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/settings_tab.dart';
+import 'package:cheza_app/features/promotions/presentation/pages/promotions_page.dart';
 class DashboardPage extends ConsumerWidget {
   static const _topTabs = [0, 1, 2, 3];
   const DashboardPage({super.key});
-  Widget _buildSidebar(WidgetRef ref, DashboardState state) {
+  Widget _buildSidebar(BuildContext context, WidgetRef ref, DashboardState state) {
     return Sidebar(
       selectedIndex: state.selectedIndex,
       onSelect: (index) {
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
         ref.read(dashboardControllerProvider.notifier).setSelectedIndex(index);
       },
     );
@@ -2250,10 +2256,10 @@ class DashboardPage extends ConsumerWidget {
           child: NetworkToastWrapper(
             child: Scaffold(
               backgroundColor: AppColors.background,
-              drawer: !isDesktop ? _buildSidebar(ref, state) : null,
+                  drawer: !isDesktop ? _buildSidebar(context, ref, state):null,
               body: Row(
                 children: [
-                  if (isDesktop) _buildSidebar(ref, state),
+                   if (isDesktop) _buildSidebar(context, ref, state),
                   Expanded(
                     child: Column(
                       children: [
@@ -2334,7 +2340,7 @@ class DashboardPage extends ConsumerWidget {
       case 0:
         return ModernHomeWidget(
           state: state,
-          onToggleStatus: notifier.togglePlaceStatus,
+         
         );
       case 1:
         return ClienteleTab(
@@ -2347,6 +2353,18 @@ class DashboardPage extends ConsumerWidget {
       case 2:
         return NoteTab(onBack: () => notifier.setSelectedIndex(0));
       case 3:
+       case 4:
+        return HistoryTab(placeId: state.placeId);
+      case 5:
+        return PromotionsPage(
+          placeId: state.placeId,
+          activePartyId: state.activePartyId,
+          placeName: state.placeName,
+        );
+      case 6:
+        return const MenuTab();
+      case 7:
+        return const SettingsTab();
         return PostsTab(onBack: () => notifier.setSelectedIndex(0));
       default:
         return const Center(

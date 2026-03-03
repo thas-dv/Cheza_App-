@@ -51,14 +51,11 @@ class Sidebar extends ConsumerWidget {
           _item('Clientèle', Icons.group_outlined, 1),
           _item('Notes', Icons.star_outline, 2),
           _item('Posts', Icons.photo_outlined, 3),
-          // _item("Dashboard", Icons.dashboard_outlined, 0),
-          // _item("Posts", Icons.photo_outlined, 1),
-          // _item("Clientèle", Icons.group_outlined, 2),
-          // _item("Promotions", Icons.local_offer_outlined, 3),
-
-          // const Spacer(),
-
-          // _item("Paramètres", Icons.settings_outlined, 4),
+         _item('Historique', Icons.history, 4),
+          _item('Promotions', Icons.local_offer_outlined, 5),
+          _item('Menu', Icons.restaurant_menu_outlined, 6),
+          const Spacer(),
+          _item('Paramètres', Icons.settings_outlined, 7),
         ],
       ),
     );

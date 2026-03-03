@@ -28,10 +28,21 @@ class DashboardRepositoryImpl implements DashboardRepository {
     return PlaceInfo(
       id: placeId,
       name: (place['name'] ?? 'Nom du Lieu') as String,
+      isOpened: _asBool(place['opened']),
       photoUrl: place['photo_url'] as String?,
       address: place['address'] as String?,
       typePlace: place['type_place'] as String?,
     );
+  }
+
+  bool _asBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized == 'true' || normalized == '1' || normalized == 't';
+    }
+    return false;
   }
 
   @override

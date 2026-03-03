@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 
 class ModernHomeWidget extends StatelessWidget {
   final DashboardState state;
-    final VoidCallback onToggleStatus;
+
 
   const ModernHomeWidget({
     super.key,
     required this.state,
-    required this.onToggleStatus,
+ 
   });
 
   @override
@@ -31,8 +31,7 @@ class ModernHomeWidget extends StatelessWidget {
               posts: state.posts,
               notes: state.notes,
               engagement: state.engagement,
-              onToggleStatus: onToggleStatus,
-              isStatusUpdating: state.isStatusUpdating,
+              
             ),
             const SizedBox(height: 24),
             _SectionTitle(title: 'Informations du lieu'),

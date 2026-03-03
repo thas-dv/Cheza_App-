@@ -5,8 +5,9 @@ class PlaceInfo {
     this.photoUrl,
     this.address,
     this.typePlace,
+    required this.isOpened,
   });
-
+  final bool isOpened;
   final int id;
   final String name;
   final String? photoUrl;

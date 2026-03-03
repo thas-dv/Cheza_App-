@@ -185,6 +185,7 @@ class SupabaseServiceParties {
           })
           .select('id')
           .single();
+      await supabase.from('places').update({'opened': true}).eq('id', placeId);
 
       return res['id'] as int;
     } catch (e) {
