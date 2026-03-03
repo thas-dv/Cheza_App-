@@ -4,12 +4,16 @@ class TopBar extends StatelessWidget {
   final bool isOpen;
   final int selectedIndex;
   final ValueChanged<int> onSelect;
+  final bool isStatusUpdating;
+  final VoidCallback onToggleStatus;
 
   const TopBar({
     super.key,
     required this.isOpen,
     required this.selectedIndex,
     required this.onSelect,
+    required this.onToggleStatus,
+    required this.isStatusUpdating,
   });
 
   @override
@@ -64,22 +68,29 @@ class TopBar extends StatelessWidget {
           ),
 
           // Badge de Statut
-          FilledButton.tonal(
-            onPressed: () {},
+          FilledButton.tonalIcon(
+            onPressed: isStatusUpdating ? null : onToggleStatus,
+            icon: isStatusUpdating
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(isOpen ? Icons.lock_outline : Icons.lock_open_outlined),
             style: FilledButton.styleFrom(
               backgroundColor: isOpen
-                  ? Colors.green.withOpacity(0.15)
-                  : Colors.red.withOpacity(0.15),
+                  ? Colors.red.withOpacity(0.15)
+                  : Colors.green.withOpacity(0.15),
               side: BorderSide(
                 color: isOpen
-                    ? Colors.green.withOpacity(0.4)
-                    : Colors.red.withOpacity(0.4),
+                    ? Colors.red.withOpacity(0.4)
+                    : Colors.green.withOpacity(0.4),
               ),
             ),
-            child: Text(
-              isOpen ? 'Ouvert' : 'Fermé',
+            label: Text(
+              isOpen ? 'Fermer' : 'Ouvrir',
               style: TextStyle(
-                color: isOpen ? Colors.greenAccent : Colors.redAccent,
+                color: isOpen ? Colors.redAccent : Colors.greenAccent,
                 fontWeight: FontWeight.w700,
               ),
             ),

@@ -15,7 +15,7 @@ class PartySummaryModel {
 
   factory PartySummaryModel.fromJson(Map<String, dynamic> json) {
     final started = _parseDate(json['date_started']);
-    final closed = _parseDate(json['date_closed']) ?? started;
+    final closed = _parseDate(json['date_closed']);
     return PartySummaryModel(
       id: json['id'] as int,
       name: (json['name_party'] as String?) ?? '',

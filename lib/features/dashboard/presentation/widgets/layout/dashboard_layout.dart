@@ -7,6 +7,8 @@ class DashboardLayout extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onSelect;
   final bool isOpen;
+  final bool isStatusUpdating;
+  final VoidCallback onToggleStatus;
 
   const DashboardLayout({
     super.key,
@@ -14,6 +16,8 @@ class DashboardLayout extends StatelessWidget {
     required this.selectedIndex,
     required this.onSelect,
     required this.isOpen,
+    required this.isStatusUpdating,
+    required this.onToggleStatus,
   });
 
   @override
@@ -48,8 +52,10 @@ class DashboardLayout extends StatelessWidget {
                 // ✅ TOPBAR BIEN APPELÉ ICI
                 TopBar(
                   isOpen: isOpen,
+                  isStatusUpdating: isStatusUpdating,
                   selectedIndex: selectedIndex,
                   onSelect: onSelect,
+                  onToggleStatus: onToggleStatus,
                 ),
 
                 const Divider(height: 1),

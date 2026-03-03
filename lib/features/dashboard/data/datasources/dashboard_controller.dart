@@ -6,6 +6,7 @@ import 'package:cheza_app/providers/party_providers.dart'
     show clienteleProvider;
 import 'package:cheza_app/realtime/dashboard_realtime_controller.dart'
     show DashboardRealtimeController;
+import 'package:cheza_app/features/dashboard/domain/usecases/manage_party_usecases.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -46,7 +47,7 @@ class DashboardController extends StateNotifier<DashboardState> {
       state = state.copyWith(
         placeId: place.id,
         placeName: place.name,
-        placeImageUrl: place.photoUrl,
+           placeImageUrl: _normalizeImageUrl(place.photoUrl),
         placeAddress: place.address,
         placeDescription: place.typePlace,
         adminName: admin.name,
@@ -94,7 +95,58 @@ class DashboardController extends StateNotifier<DashboardState> {
     await _refreshStats(party.id);
     _setupRealtime(party.id);
   }
+//////////////////////////////////////////
+  String? _normalizeImageUrl(String? rawUrl) {
+    if (rawUrl == null) return null;
+    final trimmed = rawUrl.trim();
+    if (trimmed.isEmpty) return null;
 
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return Uri.encodeFull(trimmed);
+    }
+
+    return Uri.encodeFull(trimmed);
+  }
+
+  Future<bool> togglePlaceStatus() async {
+    if (state.isStatusUpdating || state.placeId == null) return false;
+
+    state = state.copyWith(isStatusUpdating: true);
+
+    try {
+      if (state.isOpen) {
+        final activePartyId = state.activePartyId;
+        if (activePartyId == null) return false;
+
+        final closeParty = ref.read(closePartyUseCaseProvider);
+        final closed = await closeParty(
+          partyId: activePartyId,
+          closedAt: DateTime.now(),
+        );
+
+        if (!closed) return false;
+      } else {
+        final createParty = ref.read(createPartyUseCaseProvider);
+        final now = DateTime.now();
+        final createdId = await createParty(
+          placeId: state.placeId!,
+          name: 'Session ${state.placeName} - ${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}',
+          openedAt: now,
+          closedAt: now.add(const Duration(hours: 12)),
+        );
+
+        if (createdId == null) return false;
+      }
+
+      await refreshActiveParty();
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      state = state.copyWith(isStatusUpdating: false);
+    }
+  }
+  /////////////////////////////////////////////
   Future<void> _refreshStats(int partyId) async {
     final stats = await ref.read(loadDashboardStatsUseCaseProvider)(partyId);
     state = state.copyWith(

@@ -11,11 +11,12 @@ class DashboardState {
   final int visitors;
   final int posts;
   final int selectedIndex;
-final String? placeImageUrl;
+  final bool isStatusUpdating;
+  final String? placeImageUrl;
   final String adminName;
   final String? placeDescription;
   final String? placeAddress;
-   final int notes;
+  final int notes;
   final int engagement;
   const DashboardState({
     this.isLoading = true,
@@ -33,12 +34,11 @@ final String? placeImageUrl;
     this.closeTime,
     this.visitors = 0,
     this.posts = 0,
-     this.notes = 0,
+    this.notes = 0,
     this.engagement = 0,
     this.selectedIndex = 0,
+    this.isStatusUpdating = false,
   });
-
- 
 
   DashboardState copyWith({
     bool? isLoading,
@@ -50,7 +50,7 @@ final String? placeImageUrl;
     String? partyName,
     DateTime? openTime,
     DateTime? closeTime,
-      String? placeImageUrl,
+    String? placeImageUrl,
     String? adminName,
     String? placeDescription,
     String? placeAddress,
@@ -59,6 +59,7 @@ final String? placeImageUrl;
     int? notes,
     int? engagement,
     int? selectedIndex,
+    bool? isStatusUpdating,
   }) {
     return DashboardState(
       isLoading: isLoading ?? this.isLoading,
@@ -66,7 +67,7 @@ final String? placeImageUrl;
       isOpen: isOpen ?? this.isOpen,
       placeId: placeId ?? this.placeId,
       placeName: placeName ?? this.placeName,
-       placeImageUrl: placeImageUrl ?? this.placeImageUrl,
+      placeImageUrl: placeImageUrl ?? this.placeImageUrl,
       adminName: adminName ?? this.adminName,
       placeDescription: placeDescription ?? this.placeDescription,
       placeAddress: placeAddress ?? this.placeAddress,
@@ -79,6 +80,7 @@ final String? placeImageUrl;
       notes: notes ?? this.notes,
       engagement: engagement ?? this.engagement,
       selectedIndex: selectedIndex ?? this.selectedIndex,
+      isStatusUpdating: isStatusUpdating ?? this.isStatusUpdating,
     );
   }
 }

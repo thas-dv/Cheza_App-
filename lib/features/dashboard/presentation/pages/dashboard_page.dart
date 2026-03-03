@@ -2220,6 +2220,7 @@ import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/clientele
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/note_tab.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/posts_tab.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';
+
 class DashboardPage extends ConsumerWidget {
   static const _topTabs = [0, 1, 2, 3];
   const DashboardPage({super.key});
@@ -2231,6 +2232,7 @@ class DashboardPage extends ConsumerWidget {
       },
     );
   }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(dashboardControllerProvider);
@@ -2258,9 +2260,12 @@ class DashboardPage extends ConsumerWidget {
                         // NOUVEL APPEL TOPBAR
                         TopBar(
                           isOpen: state.isOpen,
-                          selectedIndex: state.selectedIndex.clamp(0, 3).toInt(),
+                          isStatusUpdating: state.isStatusUpdating,
+                          selectedIndex: state.selectedIndex
+                              .clamp(0, 3)
+                              .toInt(),
                           onSelect: notifier.setSelectedIndex,
-        
+                          onToggleStatus: notifier.togglePlaceStatus,
                         ),
 
                         const Divider(
@@ -2271,14 +2276,14 @@ class DashboardPage extends ConsumerWidget {
                         Expanded(
                           child: state.isLoading
                               ? const Center(child: CircularProgressIndicator())
-                                                : _buildSelectedPage(state, notifier),
+                              : _buildSelectedPage(state, notifier),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-                   bottomNavigationBar: isDesktop
+              bottomNavigationBar: isDesktop
                   ? null
                   : BottomNavigationBar(
                       currentIndex: _topTabs.contains(state.selectedIndex)
@@ -2311,22 +2316,26 @@ class DashboardPage extends ConsumerWidget {
       },
     );
   }
-// À ajouter à l'intérieur de ta classe DashboardPage
-// Widget _buildSelectedPage(int index) {
-//   switch (index) {
-//     case 1: return const Center(child: Text("Page Clientèle", style: TextStyle(color: Colors.white)));
-//     case 2: return const Center(child: Text("Page Notes", style: TextStyle(color: Colors.white)));
-//     case 3: return const Center(child: Text("Page Posts", style: TextStyle(color: Colors.white)));
-//     default: return const SizedBox.shrink();
-//   }
-// }
+
+  // À ajouter à l'intérieur de ta classe DashboardPage
+  // Widget _buildSelectedPage(int index) {
+  //   switch (index) {
+  //     case 1: return const Center(child: Text("Page Clientèle", style: TextStyle(color: Colors.white)));
+  //     case 2: return const Center(child: Text("Page Notes", style: TextStyle(color: Colors.white)));
+  //     case 3: return const Center(child: Text("Page Posts", style: TextStyle(color: Colors.white)));
+  //     default: return const SizedBox.shrink();
+  //   }
+  // }
   Widget _buildSelectedPage(
     DashboardState state,
     DashboardController notifier,
   ) {
     switch (state.selectedIndex) {
       case 0:
-        return ModernHomeWidget(state: state);
+        return ModernHomeWidget(
+          state: state,
+          onToggleStatus: notifier.togglePlaceStatus,
+        );
       case 1:
         return ClienteleTab(
           key: ValueKey(state.activePartyId),
@@ -2348,5 +2357,4 @@ class DashboardPage extends ConsumerWidget {
         );
     }
   }
-
 }

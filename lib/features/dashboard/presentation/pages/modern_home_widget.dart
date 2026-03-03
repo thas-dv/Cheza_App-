@@ -1,15 +1,18 @@
 import 'package:cheza_app/features/dashboard/presentation/widgets/hero_place_card.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/layout/dashboard_state.dart';
-import 'package:cheza_app/features/dashboard/presentation/widgets/stats_row.dart';
-import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/dashboard_dialogs.dart';
-import 'package:flutter/material.dart';
 import 'package:cheza_app/core/ui/responsive_layout.dart' show Breakpoints;
-import 'package:cheza_app/widgets/stat_card.dart';
 import 'package:flutter/material.dart';
+
 
 class ModernHomeWidget extends StatelessWidget {
   final DashboardState state;
-  const ModernHomeWidget({super.key, required this.state});
+    final VoidCallback onToggleStatus;
+
+  const ModernHomeWidget({
+    super.key,
+    required this.state,
+    required this.onToggleStatus,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,43 +27,12 @@ class ModernHomeWidget extends StatelessWidget {
               imageUrl: state.placeImageUrl,
               isOpen: state.isOpen,
               adminName: state.adminName,
-            ),
-            const SizedBox(height: 24),
-            _SectionTitle(title: 'Statistique'),
-            const SizedBox(height: 16),
-            GridView.count(
-              crossAxisCount: isMobile ? 2 : 4,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 14,
-              mainAxisSpacing: 14,
-              childAspectRatio: isMobile ? 1.1 : 1.4,
-              children: [
-                StatCard(
-                  label: 'Visiteurs',
-                  value: state.visitors,
-                  icon: Icons.groups_rounded,
-                  color: Colors.blueAccent,
-                ),
-                StatCard(
-                  label: 'Posts',
-                  value: state.posts,
-                  icon: Icons.photo_library_outlined,
-                  color: Colors.purpleAccent,
-                ),
-                StatCard(
-                  label: 'Notes',
-                  value: state.notes,
-                  icon: Icons.star_outline_rounded,
-                  color: Colors.orangeAccent,
-                ),
-                StatCard(
-                  label: 'Engagement',
-                  value: state.engagement,
-                  icon: Icons.bolt_rounded,
-                  color: Colors.greenAccent,
-                ),
-              ],
+            visitors: state.visitors,
+              posts: state.posts,
+              notes: state.notes,
+              engagement: state.engagement,
+              onToggleStatus: onToggleStatus,
+              isStatusUpdating: state.isStatusUpdating,
             ),
             const SizedBox(height: 24),
             _SectionTitle(title: 'Informations du lieu'),

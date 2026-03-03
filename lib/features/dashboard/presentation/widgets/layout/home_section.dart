@@ -26,13 +26,12 @@ class HomeSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // HERO
-          HeroPlaceCard(
-            placeName: placeName,
-            imageUrl: imageUrl,
-            isOpen: isOpen,
-            adminName: 'Admin',
-          ),
-
+          // HeroPlaceCard(
+          //   placeName: placeName,
+          //   imageUrl: imageUrl,
+          //   isOpen: isOpen,
+          //   adminName: 'Admin',
+          // ),
           const SizedBox(height: 40),
 
           // BARRE STATISTIQUE
