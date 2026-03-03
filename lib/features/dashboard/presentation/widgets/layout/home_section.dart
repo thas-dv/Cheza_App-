@@ -29,11 +29,8 @@ class HomeSection extends ConsumerWidget {
           HeroPlaceCard(
             placeName: placeName,
             imageUrl: imageUrl,
-            visitors: stats?.visitors ?? 0,
-            posts: stats?.posts ?? 0,
-            notes: stats?.notes ?? 0,
-            engagement: stats?.engagement ?? 0,
-            onActionPressed: () => {},
+            isOpen: isOpen,
+            adminName: 'Admin',
           ),
 
           const SizedBox(height: 40),

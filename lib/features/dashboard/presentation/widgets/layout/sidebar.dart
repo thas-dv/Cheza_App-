@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cheza_app/features/auth/presentation/providers/admin_provider.dart';
-
 class Sidebar extends ConsumerWidget {
   final int selectedIndex;
-  final Function(int) onSelect;
+  final ValueChanged<int> onSelect;
 
   const Sidebar({
     super.key,
@@ -22,15 +21,15 @@ class Sidebar extends ConsumerWidget {
         color: Color(0xFF111827),
         border: Border(right: BorderSide(color: Color(0xFF1E293B))),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            radius: 30,
+            radius: 28,
             backgroundColor: Colors.grey.shade800,
-            backgroundImage:
-                admin?.photoUrl != null && admin!.photoUrl!.isNotEmpty
+
+                 backgroundImage: admin?.photoUrl != null && admin!.photoUrl!.isNotEmpty
                 ? NetworkImage(admin.photoUrl!)
                 : null,
             child: admin?.photoUrl == null || admin!.photoUrl!.isEmpty
@@ -39,15 +38,27 @@ class Sidebar extends ConsumerWidget {
           ),
 
           const SizedBox(height: 50),
+ const SizedBox(height: 10),
+          Text(
+            admin?.name ?? 'Admin',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 30),
+          _item('Dashboard', Icons.dashboard_outlined, 0),
+          _item('Clientèle', Icons.group_outlined, 1),
+          _item('Notes', Icons.star_outline, 2),
+          _item('Posts', Icons.photo_outlined, 3),
+          // _item("Dashboard", Icons.dashboard_outlined, 0),
+          // _item("Posts", Icons.photo_outlined, 1),
+          // _item("Clientèle", Icons.group_outlined, 2),
+          // _item("Promotions", Icons.local_offer_outlined, 3),
 
-          _item("Dashboard", Icons.dashboard_outlined, 0),
-          _item("Posts", Icons.photo_outlined, 1),
-          _item("Clientèle", Icons.group_outlined, 2),
-          _item("Promotions", Icons.local_offer_outlined, 3),
+          // const Spacer(),
 
-          const Spacer(),
-
-          _item("Paramètres", Icons.settings_outlined, 4),
+          // _item("Paramètres", Icons.settings_outlined, 4),
         ],
       ),
     );
@@ -57,6 +68,7 @@ class Sidebar extends ConsumerWidget {
     final selected = selectedIndex == index;
 
     return ListTile(
+            contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: selected ? Colors.blue : Colors.grey),
       title: Text(
         title,

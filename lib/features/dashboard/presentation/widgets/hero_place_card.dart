@@ -3,120 +3,103 @@ import 'package:flutter/material.dart';
 class HeroPlaceCard extends StatelessWidget {
   final String placeName;
   final String? imageUrl;
-  final int visitors, posts, notes, engagement;
+  final bool isOpen;
+  final String adminName;
 
   const HeroPlaceCard({
     super.key,
     required this.placeName,
     this.imageUrl,
-    required this.visitors,
-    required this.posts,
-    required this.notes,
-    required this.engagement, required void Function() onActionPressed, DateTime? openTime, DateTime? closeTime,
+    required this.isOpen,
+    required this.adminName,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 25,
-            offset: const Offset(0, 12),
-          )
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: Stack(
-          children: [
-            // Image de fond
-            AspectRatio(
-              aspectRatio: 16 / 8,
-              child: imageUrl != null
-                  ? Image.network(imageUrl!, fit: BoxFit.cover)
-                  : Container(color: Colors.indigo.shade900),
-            ),
-
-            // Filtre dégradé pour le texte
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    stops: const [0.0, 0.6, 1.0],
-                    colors: [
-                      Colors.black.withOpacity(0.95),
-                      Colors.black.withOpacity(0.4),
-                      Colors.transparent,
-                    ],
-                  ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Stack(
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 7,
+            child: imageUrl != null && imageUrl!.isNotEmpty
+                ? Image.network(imageUrl!, fit: BoxFit.cover)
+                : Container(color: const Color(0xFF1E293B)),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.2),
+                    Colors.black.withOpacity(0.75),
+                  ],
                 ),
               ),
             ),
+          ),
 
-            // Textes et Statistiques
-            Positioned(
-              left: 24,
-              right: 24,
-              bottom: 24,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    placeName,
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 22,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      placeName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Connecté: $adminName',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isOpen ? Colors.green : Colors.red,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    isOpen ? 'OUVERT' : 'FERMÉ',
                     style: const TextStyle(
                       fontSize: 32,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      letterSpacing: -1,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildStat("Visiteurs", visitors.toString()),
-                      _buildStat("Posts", posts.toString()),
-                      _buildStat("Notes", notes.toString()),
-                      _buildStat("Engagement", "$engagement%"),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+                // const SizedBox(height: 20),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //   children: [
+                //     _buildStat("Visiteurs", visitors.toString()),
+                //     _buildStat("Posts", posts.toString()),
+                //     _buildStat("Notes", notes.toString()),
+                //     _buildStat("Engagement", "$engagement%"),
+                //   ],
+                // ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildStat(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          label.toUpperCase(),
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-          ),
-        ),
-      ],
     );
   }
 }

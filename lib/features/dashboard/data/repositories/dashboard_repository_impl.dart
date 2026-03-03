@@ -29,6 +29,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
       id: placeId,
       name: (place['name'] ?? 'Nom du Lieu') as String,
       photoUrl: place['photo_url'] as String?,
+      address: place['address'] as String?,
+      typePlace: place['type_place'] as String?,
     );
   }
 

@@ -2216,8 +2216,12 @@ import 'package:cheza_app/themes/app_colors.dart';
 import 'package:cheza_app/widgets/network_aware_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/clientele_tab.dart';
+import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/note_tab.dart';
+import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/posts_tab.dart';
+import 'package:cheza_app/services/supabase_network_service.dart';
 class DashboardPage extends ConsumerWidget {
+  static const _topTabs = [0, 1, 2, 3];
   const DashboardPage({super.key});
   Widget _buildSidebar(WidgetRef ref, DashboardState state) {
     return Sidebar(
@@ -2234,7 +2238,7 @@ class DashboardPage extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isLarge = Breakpoints.isDesktop(constraints.maxWidth);
+        final isDesktop = Breakpoints.isDesktop(constraints.maxWidth);
 
         return PopScope(
           canPop: state.selectedIndex == 0,
@@ -2244,18 +2248,19 @@ class DashboardPage extends ConsumerWidget {
           child: NetworkToastWrapper(
             child: Scaffold(
               backgroundColor: AppColors.background,
-              drawer: !isLarge ? _buildSidebar(ref, state) : null,
+              drawer: !isDesktop ? _buildSidebar(ref, state) : null,
               body: Row(
                 children: [
-                  if (isLarge) _buildSidebar(ref, state),
+                  if (isDesktop) _buildSidebar(ref, state),
                   Expanded(
                     child: Column(
                       children: [
                         // NOUVEL APPEL TOPBAR
                         TopBar(
                           isOpen: state.isOpen,
-                          selectedIndex: state.selectedIndex,
-                          onSelect: (index) => notifier.setSelectedIndex(index),
+                          selectedIndex: state.selectedIndex.clamp(0, 3).toInt(),
+                          onSelect: notifier.setSelectedIndex,
+        
                         ),
 
                         const Divider(
@@ -2266,18 +2271,40 @@ class DashboardPage extends ConsumerWidget {
                         Expanded(
                           child: state.isLoading
                               ? const Center(child: CircularProgressIndicator())
-                              : Padding(
-                                  padding: const EdgeInsets.all(30),
-                                  child: state.selectedIndex == 0
-                                      ? ModernHomeWidget(state: state)
-                                      : _buildSelectedPage(state.selectedIndex),
-                                ),
+                                                : _buildSelectedPage(state, notifier),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
+                   bottomNavigationBar: isDesktop
+                  ? null
+                  : BottomNavigationBar(
+                      currentIndex: _topTabs.contains(state.selectedIndex)
+                          ? state.selectedIndex
+                          : 0,
+                      type: BottomNavigationBarType.fixed,
+                      onTap: notifier.setSelectedIndex,
+                      items: const [
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.dashboard_outlined),
+                          label: 'Dashboard',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.group_outlined),
+                          label: 'Clientèle',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.star_outline),
+                          label: 'Notes',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.photo_library_outlined),
+                          label: 'Posts',
+                        ),
+                      ],
+                    ),
             ),
           ),
         );
@@ -2285,13 +2312,41 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 // À ajouter à l'intérieur de ta classe DashboardPage
-Widget _buildSelectedPage(int index) {
-  switch (index) {
-    case 1: return const Center(child: Text("Page Clientèle", style: TextStyle(color: Colors.white)));
-    case 2: return const Center(child: Text("Page Notes", style: TextStyle(color: Colors.white)));
-    case 3: return const Center(child: Text("Page Posts", style: TextStyle(color: Colors.white)));
-    default: return const SizedBox.shrink();
+// Widget _buildSelectedPage(int index) {
+//   switch (index) {
+//     case 1: return const Center(child: Text("Page Clientèle", style: TextStyle(color: Colors.white)));
+//     case 2: return const Center(child: Text("Page Notes", style: TextStyle(color: Colors.white)));
+//     case 3: return const Center(child: Text("Page Posts", style: TextStyle(color: Colors.white)));
+//     default: return const SizedBox.shrink();
+//   }
+// }
+  Widget _buildSelectedPage(
+    DashboardState state,
+    DashboardController notifier,
+  ) {
+    switch (state.selectedIndex) {
+      case 0:
+        return ModernHomeWidget(state: state);
+      case 1:
+        return ClienteleTab(
+          key: ValueKey(state.activePartyId),
+          partyId: state.activePartyId,
+          onBack: () => notifier.setSelectedIndex(0),
+          cachedCount: state.visitors,
+          isOnline: NetworkService.isConnected,
+        );
+      case 2:
+        return NoteTab(onBack: () => notifier.setSelectedIndex(0));
+      case 3:
+        return PostsTab(onBack: () => notifier.setSelectedIndex(0));
+      default:
+        return const Center(
+          child: Text(
+            'Page indisponible',
+            style: TextStyle(color: Colors.white70),
+          ),
+        );
+    }
   }
-}
 
 }

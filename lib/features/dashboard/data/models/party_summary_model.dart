@@ -14,12 +14,21 @@ class PartySummaryModel {
   final DateTime dateClosed;
 
   factory PartySummaryModel.fromJson(Map<String, dynamic> json) {
+    final started = _parseDate(json['date_started']);
+    final closed = _parseDate(json['date_closed']) ?? started;
     return PartySummaryModel(
       id: json['id'] as int,
-      name: (json['name_party'] ?? '') as String,
-      dateStarted: DateTime.parse(json['date_started'] as String).toLocal(),
-      dateClosed: DateTime.parse(json['date_closed'] as String).toLocal(),
+      name: (json['name_party'] as String?) ?? '',
+      dateStarted: started,
+      dateClosed: closed,
     );
+  }
+  static DateTime _parseDate(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value.toLocal();
+
+    final parsed = DateTime.tryParse(value.toString());
+    return (parsed ?? DateTime.now()).toLocal();
   }
 
   PartySummary toEntity() => PartySummary(

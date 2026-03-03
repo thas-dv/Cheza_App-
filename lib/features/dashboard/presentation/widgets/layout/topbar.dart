@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class TopBar extends StatelessWidget {
   final bool isOpen;
   final int selectedIndex;
-  final Function(int) onSelect;
+  final ValueChanged<int> onSelect;
 
   const TopBar({
     super.key,
@@ -14,51 +14,48 @@ class TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = ["Dashboard", "Clientèle", "Notes", "Posts"];
+    const tabs = ['Dashboard', 'Clientèle', 'Notes', 'Posts'];
 
     return Container(
       height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
-        border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
+        border: Border(
+          bottom: BorderSide(color: Colors.white.withOpacity(0.05)),
+        ),
       ),
       child: Row(
         children: [
           // Navigation
           Expanded(
-            child: Row(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
               children: List.generate(tabs.length, (index) {
                 final isSelected = selectedIndex == index;
-                return GestureDetector(
+                return InkWell(
+                  borderRadius: BorderRadius.circular(12),
                   onTap: () => onSelect(index),
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          tabs[index],
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.white54,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Indicateur animé
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOutCubic,
-                          height: 3,
-                          width: isSelected ? 24 : 0,
-                          decoration: BoxDecoration(
-                            color: Colors.blueAccent,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.white.withOpacity(0.08)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      tabs[index],
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white60,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
                     ),
                   ),
                 );
@@ -67,43 +64,24 @@ class TopBar extends StatelessWidget {
           ),
 
           // Badge de Statut
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: isOpen ? Colors.green.withOpacity(0.1) : Colors.redAccent.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isOpen ? Colors.green.withOpacity(0.2) : Colors.redAccent.withOpacity(0.2),
+          FilledButton.tonal(
+            onPressed: () {},
+            style: FilledButton.styleFrom(
+              backgroundColor: isOpen
+                  ? Colors.green.withOpacity(0.15)
+                  : Colors.red.withOpacity(0.15),
+              side: BorderSide(
+                color: isOpen
+                    ? Colors.green.withOpacity(0.4)
+                    : Colors.red.withOpacity(0.4),
               ),
             ),
-            child: Row(
-              children: [
-                Container(
-                  height: 6,
-                  width: 6,
-                  decoration: BoxDecoration(
-                    color: isOpen ? Colors.green : Colors.redAccent,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: (isOpen ? Colors.green : Colors.redAccent).withOpacity(0.5),
-                        blurRadius: 4,
-                        spreadRadius: 1,
-                      )
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  isOpen ? "OUVERT" : "FERMÉ",
-                  style: TextStyle(
-                    color: isOpen ? Colors.green : Colors.redAccent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ],
+            child: Text(
+              isOpen ? 'Ouvert' : 'Fermé',
+              style: TextStyle(
+                color: isOpen ? Colors.greenAccent : Colors.redAccent,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
