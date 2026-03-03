@@ -1,34 +1,52 @@
-// lib/widgets/stat_card.dart
-
 import 'package:flutter/material.dart';
 
 class StatCard extends StatelessWidget {
   final String label;
-  final String value;
+  final int value;
+  final IconData icon;
+  final Color color;
 
   const StatCard({
     super.key,
     required this.label,
     required this.value,
+    required this.icon,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 90,
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F1F1F),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
           ),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: Colors.grey.shade400)),
+        ],
+      ),
+      padding: const EdgeInsets.all(30),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 38, color: color),
+          const SizedBox(height: 16),
+          Text(
+            value.toString(),
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.grey),
+          ),
         ],
       ),
     );
