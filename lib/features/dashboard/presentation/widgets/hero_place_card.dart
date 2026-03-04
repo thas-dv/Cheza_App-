@@ -31,10 +31,18 @@ class HeroPlaceCard extends StatelessWidget {
         children: [
           AspectRatio(
             aspectRatio: isMobile ? 16 / 11 : 16 / 7,
-            child: imageUrl != null && imageUrl!.isNotEmpty
+            child: (imageUrl != null && imageUrl!.isNotEmpty)
                 ? Image.network(
                     imageUrl!,
                     fit: BoxFit.cover,
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return Container(
+                        color: const Color(0xFF1E293B),
+                        alignment: Alignment.center,
+                        child: const CircularProgressIndicator(),
+                      );
+                    },
                     errorBuilder: (_, __, ___) => Container(
                       color: const Color(0xFF1E293B),
                       alignment: Alignment.center,

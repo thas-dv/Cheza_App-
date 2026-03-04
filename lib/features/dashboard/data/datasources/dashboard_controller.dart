@@ -1,15 +1,12 @@
 import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cheza_app/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/layout/dashboard_state.dart';
 import 'package:cheza_app/providers/party_providers.dart'
     show clienteleProvider;
-import 'package:cheza_app/realtime/dashboard_realtime_controller.dart'
-    show DashboardRealtimeController;
-import 'package:cheza_app/features/dashboard/domain/usecases/manage_party_usecases.dart';
+import 'package:cheza_app/realtime/dashboard_realtime_controller.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:cheza_app/features/auth/presentation/providers/admin_provider.dart';
 
 final dashboardControllerProvider =
@@ -20,14 +17,16 @@ final dashboardControllerProvider =
 class DashboardController extends StateNotifier<DashboardState> {
   final Ref ref;
   final DashboardRealtimeController _realtime = DashboardRealtimeController();
+
   StreamSubscription? _networkSub;
 
-  DashboardController(this.ref) : super(DashboardState()) {
-    init();
+  DashboardController(this.ref) : super(const DashboardState()) {
+    _init();
   }
 
-  void init() {
+  void _init() {
     loadInitialData();
+
     _networkSub = NetworkService.connectionStream.listen((connected) {
       if (connected) {
         loadInitialData();
@@ -35,25 +34,30 @@ class DashboardController extends StateNotifier<DashboardState> {
     });
   }
 
+  // ================= LOAD INITIAL =================
+
   Future<void> loadInitialData() async {
     state = state.copyWith(isLoading: true, hasNetworkError: false);
+
     try {
       final place = await ref.read(dashboardRepositoryProvider).fetchMyPlace();
       final admin = await ref.read(dashboardRepositoryProvider).fetchMyAdmin();
 
       ref.read(adminProvider.notifier).state = admin;
+
+      /// image
       ref.read(placePhotoProvider.notifier).state = place.photoUrl;
 
       state = state.copyWith(
         placeId: place.id,
         placeName: place.name,
-        placeImageUrl: _normalizeImageUrl(place.photoUrl),
         placeAddress: place.address,
         placeDescription: place.typePlace,
         adminName: admin.name,
         placeOpenedFromDb: place.isOpened,
         isOpen: place.isOpened,
       );
+
       await refreshActiveParty();
     } catch (_) {
       state = state.copyWith(hasNetworkError: true);
@@ -62,18 +66,24 @@ class DashboardController extends StateNotifier<DashboardState> {
     }
   }
 
+  // ================= ACTIVE PARTY =================
+
   Future<void> refreshActiveParty() async {
     if (state.placeId == null) return;
+
     final party = await ref.read(fetchActivePartyUseCaseProvider)(
       state.placeId!,
     );
 
+    /// Aucune fête active
     if (party == null) {
       _realtime.dispose();
+
       ref.read(activePartyIdProvider.notifier).state = null;
       ref.read(dashboardStatsProvider.notifier).clear();
+
       state = state.copyWith(
-        isOpen: state.placeOpenedFromDb,
+        isOpen: false,
         activePartyId: null,
         partyName: '',
         openTime: null,
@@ -83,11 +93,15 @@ class DashboardController extends StateNotifier<DashboardState> {
         notes: 0,
         engagement: 0,
       );
+
       return;
     }
+
+    /// Fête active
     ref.read(activePartyIdProvider.notifier).state = party.id;
+
     state = state.copyWith(
-      placeOpenedFromDb: true,
+      isOpen: true,
       activePartyId: party.id,
       partyName: party.name,
       openTime: party.dateStarted,
@@ -98,18 +112,7 @@ class DashboardController extends StateNotifier<DashboardState> {
     _setupRealtime(party.id);
   }
 
-  //////////////////////////////////////////
-  String? _normalizeImageUrl(String? rawUrl) {
-    if (rawUrl == null) return null;
-    final trimmed = rawUrl.trim();
-    if (trimmed.isEmpty) return null;
-
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return Uri.encodeFull(trimmed);
-    }
-
-    return Uri.encodeFull(trimmed);
-  }
+  // ================= TOGGLE =================
 
   Future<bool> togglePlaceStatus() async {
     if (state.isStatusUpdating || state.placeId == null) return false;
@@ -117,31 +120,27 @@ class DashboardController extends StateNotifier<DashboardState> {
     state = state.copyWith(isStatusUpdating: true);
 
     try {
-      if (state.isOpen) {
-        final activePartyId = state.activePartyId;
-        if (activePartyId == null) return false;
-
+      if (state.isOpen && state.activePartyId != null) {
         final closeParty = ref.read(closePartyUseCaseProvider);
+
         final closed = await closeParty(
-          partyId: activePartyId,
+          partyId: state.activePartyId!,
           closedAt: DateTime.now(),
         );
 
         if (!closed) return false;
-        state = state.copyWith(isOpen: false, placeOpenedFromDb: false);
       } else {
         final createParty = ref.read(createPartyUseCaseProvider);
         final now = DateTime.now();
+
         final createdId = await createParty(
           placeId: state.placeId!,
-          name:
-              'Session ${state.placeName} - ${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}',
+          name: 'Session ${state.placeName} - ${now.day}/${now.month}',
           openedAt: now,
           closedAt: now.add(const Duration(hours: 12)),
         );
 
         if (createdId == null) return false;
-        state = state.copyWith(isOpen: true, placeOpenedFromDb: true);
       }
 
       await refreshActiveParty();
@@ -153,9 +152,11 @@ class DashboardController extends StateNotifier<DashboardState> {
     }
   }
 
-  /////////////////////////////////////////////
+  // ================= STATS =================
+
   Future<void> _refreshStats(int partyId) async {
     final stats = await ref.read(loadDashboardStatsUseCaseProvider)(partyId);
+
     state = state.copyWith(
       visitors: stats.visitors,
       posts: stats.posts,
@@ -164,6 +165,8 @@ class DashboardController extends StateNotifier<DashboardState> {
     );
   }
 
+  // ================= REALTIME =================
+
   void _setupRealtime(int partyId) {
     _realtime.startAttendanceRealtime(
       partyId: partyId,
@@ -171,13 +174,16 @@ class DashboardController extends StateNotifier<DashboardState> {
         final data = await ref
             .read(dashboardRepositoryProvider)
             .fetchClientele(partyId);
+
         ref.read(clienteleProvider.notifier).setClients(data);
+
         state = state.copyWith(visitors: data.length);
       },
       refreshClienteleCount: () async {
         final stats = await ref
             .read(dashboardRepositoryProvider)
             .loadDashboardStats(partyId);
+
         state = state.copyWith(
           visitors: stats.visitors,
           posts: stats.posts,
@@ -188,8 +194,9 @@ class DashboardController extends StateNotifier<DashboardState> {
     );
   }
 
-  void setSelectedIndex(int index) =>
-      state = state.copyWith(selectedIndex: index);
+  void setSelectedIndex(int index) {
+    state = state.copyWith(selectedIndex: index);
+  }
 
   @override
   void dispose() {

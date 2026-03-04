@@ -1,6 +1,7 @@
 // import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/legacy.dart';
+
 import 'package:cheza_app/services/supabase_service_clientel.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// ======================================================
 /// STATE

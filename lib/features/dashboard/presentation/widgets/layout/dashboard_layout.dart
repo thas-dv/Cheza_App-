@@ -28,29 +28,22 @@ class DashboardLayout extends StatelessWidget {
       backgroundColor: const Color(0xFF0B1220),
 
       drawer: !isDesktop
-          ? Sidebar(
-              selectedIndex: selectedIndex,
-              onSelect: onSelect,
-            )
+          ? Sidebar(selectedIndex: selectedIndex, onSelect: onSelect)
           : null,
 
       body: Row(
         children: [
-
           // SIDEBAR DESKTOP
           if (isDesktop)
-            Sidebar(
-              selectedIndex: selectedIndex,
-              onSelect: onSelect,
-            ),
+            Sidebar(selectedIndex: selectedIndex, onSelect: onSelect),
 
           // CONTENU PRINCIPAL
           Expanded(
             child: Column(
               children: [
-
                 // ✅ TOPBAR BIEN APPELÉ ICI
                 TopBar(
+                  isLargeScreen: isDesktop,
                   isOpen: isOpen,
                   isStatusUpdating: isStatusUpdating,
                   selectedIndex: selectedIndex,

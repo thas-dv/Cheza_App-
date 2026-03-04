@@ -6,9 +6,12 @@ class TopBar extends StatelessWidget {
   final ValueChanged<int> onSelect;
   final bool isStatusUpdating;
   final VoidCallback onToggleStatus;
-
+  final bool isLargeScreen;
+  final VoidCallback? onMenuPressed;
   const TopBar({
     super.key,
+    required this.isLargeScreen,
+    this.onMenuPressed,
     required this.isOpen,
     required this.selectedIndex,
     required this.onSelect,
@@ -19,10 +22,10 @@ class TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const tabs = ['Dashboard', 'Clientèle', 'Notes', 'Posts'];
-
+    final horizontalPadding = isLargeScreen ? 24.0 : 12.0;
     return Container(
-      height: 80,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      height: isLargeScreen ? 80 : 68,
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
         border: Border(
@@ -32,40 +35,75 @@ class TopBar extends StatelessWidget {
       child: Row(
         children: [
           // Navigation
-          Expanded(
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: List.generate(tabs.length, (index) {
-                final isSelected = selectedIndex == index;
-                return InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => onSelect(index),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.white.withOpacity(0.08)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      tabs[index],
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white60,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
+          // if (!isLargeScreen) ...[
+          //   Builder(
+          //     builder: (context) {
+          //       return IconButton(
+          //         tooltip: 'Menu',
+          //         onPressed:
+          //             onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
+          //         icon: const Icon(Icons.menu, color: Colors.white),
+          //       );
+          //     },
+          //   ),
+          //   const SizedBox(width: 4),
+          //   const Expanded(
+          //     child: Text(
+          //       'Dashboard',
+          //       overflow: TextOverflow.ellipsis,
+          //       style: TextStyle(
+          //         color: Colors.white,
+          //         fontWeight: FontWeight.w700,
+          //         fontSize: 18,
+          //       ),
+          //     ),
+          //   ),
+          // ]
+          if (!isLargeScreen) ...[
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
+            ),
+            const SizedBox(width: 4),
+          ] else
+            Expanded(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: List.generate(tabs.length, (index) {
+                  final isSelected = selectedIndex == index;
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => onSelect(index),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Colors.white.withOpacity(0.08)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        tabs[index],
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.white60,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
-          ),
 
           // Badge de Statut
           FilledButton.tonalIcon(
@@ -78,6 +116,10 @@ class TopBar extends StatelessWidget {
                   )
                 : Icon(isOpen ? Icons.lock_outline : Icons.lock_open_outlined),
             style: FilledButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: isLargeScreen ? 16 : 10,
+                vertical: isLargeScreen ? 10 : 8,
+              ),
               backgroundColor: isOpen
                   ? Colors.red.withOpacity(0.15)
                   : Colors.green.withOpacity(0.15),

@@ -21,7 +21,7 @@ import 'package:cheza_app/features/menus/data/datasources/menus_supabase_data_so
 import 'package:cheza_app/features/menus/data/repositories/menu_repository_impl.dart';
 import 'package:cheza_app/features/menus/domain/entities/menu_entity.dart';
 import 'package:cheza_app/features/menus/domain/usecases/get_menus_by_place_usecase.dart';
-import 'package:flutter_riverpod/legacy.dart';
+
 
 /// 🔥 Refresh Trigger
 final promotionsRefreshTickProvider = StateProvider<int>((ref) => 0);

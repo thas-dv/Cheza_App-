@@ -2224,10 +2224,15 @@ import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/history_t
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/menu_tab.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/settings_tab.dart';
 import 'package:cheza_app/features/promotions/presentation/pages/promotions_page.dart';
+
 class DashboardPage extends ConsumerWidget {
   static const _topTabs = [0, 1, 2, 3];
   const DashboardPage({super.key});
-  Widget _buildSidebar(BuildContext context, WidgetRef ref, DashboardState state) {
+  Widget _buildSidebar(
+    BuildContext context,
+    WidgetRef ref,
+    DashboardState state,
+  ) {
     return Sidebar(
       selectedIndex: state.selectedIndex,
       onSelect: (index) {
@@ -2246,20 +2251,23 @@ class DashboardPage extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = Breakpoints.isDesktop(constraints.maxWidth);
+        final isLarge = Breakpoints.isDesktop(constraints.maxWidth);
 
-        return PopScope(
-          canPop: state.selectedIndex == 0,
-          onPopInvoked: (didPop) {
-            if (!didPop) notifier.setSelectedIndex(0);
+        return WillPopScope(
+          onWillPop: () async {
+            if (state.selectedIndex != 0) {
+              notifier.setSelectedIndex(0);
+              return false;
+            }
+            return true;
           },
           child: NetworkToastWrapper(
             child: Scaffold(
               backgroundColor: AppColors.background,
-                  drawer: !isDesktop ? _buildSidebar(context, ref, state):null,
+              drawer: !isLarge ? _buildSidebar(context, ref, state) : null,
               body: Row(
                 children: [
-                   if (isDesktop) _buildSidebar(context, ref, state),
+                  if (isLarge) _buildSidebar(context, ref, state),
                   Expanded(
                     child: Column(
                       children: [
@@ -2267,6 +2275,7 @@ class DashboardPage extends ConsumerWidget {
                         TopBar(
                           isOpen: state.isOpen,
                           isStatusUpdating: state.isStatusUpdating,
+                          isLargeScreen: isLarge,
                           selectedIndex: state.selectedIndex
                               .clamp(0, 3)
                               .toInt(),
@@ -2289,7 +2298,7 @@ class DashboardPage extends ConsumerWidget {
                   ),
                 ],
               ),
-              bottomNavigationBar: isDesktop
+              bottomNavigationBar: isLarge
                   ? null
                   : BottomNavigationBar(
                       currentIndex: _topTabs.contains(state.selectedIndex)
@@ -2338,10 +2347,7 @@ class DashboardPage extends ConsumerWidget {
   ) {
     switch (state.selectedIndex) {
       case 0:
-        return ModernHomeWidget(
-          state: state,
-         
-        );
+        return ModernHomeWidget(state: state);
       case 1:
         return ClienteleTab(
           key: ValueKey(state.activePartyId),
@@ -2353,7 +2359,8 @@ class DashboardPage extends ConsumerWidget {
       case 2:
         return NoteTab(onBack: () => notifier.setSelectedIndex(0));
       case 3:
-       case 4:
+        return PostsTab(onBack: () => notifier.setSelectedIndex(0));
+      case 4:
         return HistoryTab(placeId: state.placeId);
       case 5:
         return PromotionsPage(
@@ -2365,7 +2372,7 @@ class DashboardPage extends ConsumerWidget {
         return const MenuTab();
       case 7:
         return const SettingsTab();
-        return PostsTab(onBack: () => notifier.setSelectedIndex(0));
+
       default:
         return const Center(
           child: Text(

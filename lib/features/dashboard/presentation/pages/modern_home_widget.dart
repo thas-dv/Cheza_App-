@@ -3,41 +3,43 @@ import 'package:cheza_app/features/dashboard/presentation/widgets/layout/dashboa
 import 'package:cheza_app/core/ui/responsive_layout.dart' show Breakpoints;
 import 'package:flutter/material.dart';
 
-
 class ModernHomeWidget extends StatelessWidget {
   final DashboardState state;
 
-
-  const ModernHomeWidget({
-    super.key,
-    required this.state,
- 
-  });
+  const ModernHomeWidget({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = Breakpoints.isMobile(constraints.maxWidth);
+
         return ListView(
-          padding: EdgeInsets.all(isMobile ? 16 : 28),
+          padding: EdgeInsets.fromLTRB(
+            isMobile ? 12 : 28,
+            isMobile ? 12 : 28,
+            isMobile ? 12 : 28,
+            isMobile ? 20 : 28,
+          ),
           children: [
             HeroPlaceCard(
               placeName: state.placeName,
               imageUrl: state.placeImageUrl,
               isOpen: state.isOpen,
               adminName: state.adminName,
-            visitors: state.visitors,
+              visitors: state.visitors,
               posts: state.posts,
               notes: state.notes,
               engagement: state.engagement,
-              
             ),
-            const SizedBox(height: 24),
-            _SectionTitle(title: 'Informations du lieu'),
+
+            SizedBox(height: isMobile ? 14 : 24),
+
+            const _SectionTitle(title: 'Informations du lieu'),
             const SizedBox(height: 16),
+
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(isMobile ? 14 : 20),
               decoration: BoxDecoration(
                 color: const Color(0xFF111827),
                 borderRadius: BorderRadius.circular(18),
@@ -55,7 +57,8 @@ class ModernHomeWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    state.placeDescription?.isNotEmpty == true
+                    (state.placeDescription != null &&
+                            state.placeDescription!.isNotEmpty)
                         ? state.placeDescription!
                         : 'Aucune description disponible pour le moment.',
                     style: const TextStyle(color: Colors.white70),
@@ -71,7 +74,8 @@ class ModernHomeWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    state.placeAddress?.isNotEmpty == true
+                    (state.placeAddress != null &&
+                            state.placeAddress!.isNotEmpty)
                         ? '📍 ${state.placeAddress}'
                         : '📍 Adresse non renseignée',
                     style: const TextStyle(color: Colors.white70),
@@ -88,6 +92,7 @@ class ModernHomeWidget extends StatelessWidget {
 
 class _SectionTitle extends StatelessWidget {
   final String title;
+
   const _SectionTitle({required this.title});
 
   @override

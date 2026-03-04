@@ -10,7 +10,7 @@ import 'package:cheza_app/features/dashboard/domain/usecases/load_dashboard_snap
 import 'package:cheza_app/features/dashboard/domain/usecases/load_dashboard_stats_usecase.dart';
 import 'package:cheza_app/features/dashboard/domain/usecases/manage_party_usecases.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
+
 
 final dashboardDataSourceProvider = Provider(
   (ref) => DashboardSupabaseDataSource(),
