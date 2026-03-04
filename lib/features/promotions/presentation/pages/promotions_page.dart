@@ -26,7 +26,7 @@ class PromotionsPage extends ConsumerWidget {
       );
     }
 
-    final promotionsAsync = ref.watch(promotionsProvider);
+    final promotionsAsync = ref.watch(promotionsProvider(placeId!));
     final actionState = ref.watch(promotionsActionProvider);
 
     return Stack(
@@ -251,13 +251,23 @@ class PromotionsPage extends ConsumerWidget {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      const Text(
-                        'Modifier la promo',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Modifier la promo',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: () => Navigator.pop(dialogContext),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
 
@@ -588,13 +598,23 @@ class PromotionsPage extends ConsumerWidget {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      const Text(
-                        'Créer une promo',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Créer une promo',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: () => Navigator.pop(dialogContext),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
 
@@ -731,6 +751,7 @@ class PromotionsPage extends ConsumerWidget {
                                           .createPromo(
                                             description: descCtrl.text.trim(),
                                             unlimited: forEveryone,
+                                            placeId: placeId!,
                                             limit: forEveryone
                                                 ? null
                                                 : int.tryParse(limitCtrl.text),
@@ -885,6 +906,8 @@ class _AddPromoItemContentState extends ConsumerState<_AddPromoItemContent> {
   void initState() {
     super.initState();
     selectedMenu = widget.menus.first;
+    selectedItem = null;
+    valueCtrl.clear();
   }
 
   @override
@@ -894,15 +917,27 @@ class _AddPromoItemContentState extends ConsumerState<_AddPromoItemContent> {
         : ref.watch(menuItemsByMenuProvider(selectedMenu!.id));
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'Ajouter article',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Ajouter article',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
         ),
+
         const SizedBox(height: 16),
 
         /// MENU
@@ -1202,29 +1237,49 @@ class _PromotionCard extends StatelessWidget {
                 },
               ),
             ),
-
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
             children: [
               TextButton.icon(
                 onPressed: onAddItem,
                 icon: const Icon(Icons.add_shopping_cart, size: 18),
                 label: const Text('Ajouter article'),
               ),
-              SizedBox(width: 10),
-              TextButton.icon(
-                onPressed: () => {},
-                label: Text("Lier à la fête"),
-                icon: const Icon(Icons.abc),
-              ),
-
-              SizedBox(width: 10),
               TextButton.icon(
                 onPressed: onAssing,
-                icon: const Icon(Icons.attribution, size: 18),
+                icon: const Icon(Icons.celebration, size: 18),
+                label: const Text('Lier à la fête'),
+              ),
+              TextButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.emoji_events, size: 18),
                 label: const Text('Vainqueurs'),
               ),
             ],
           ),
+          // Row(
+          //   children: [
+          //     TextButton.icon(
+          //       onPressed: onAddItem,
+          //       icon: const Icon(Icons.add_shopping_cart, size: 18),
+          //       label: const Text('Ajouter article'),
+          //     ),
+          //     SizedBox(width: 5),
+          //     TextButton.icon(
+          //       onPressed: () => {},
+          //       label: Text("Lier à la fête"),
+          //       icon: const Icon(Icons.abc),
+          //     ),
+
+          //     SizedBox(width: 5),
+          //     TextButton.icon(
+          //       onPressed: onAssing,
+          //       icon: const Icon(Icons.attribution, size: 18),
+          //       label: const Text('Vainqueurs'),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );

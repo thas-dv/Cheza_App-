@@ -76,9 +76,12 @@ final getMenuItemsByMenuUseCaseProvider = Provider(
 
 /// 🔥 Providers
 
-final promotionsProvider = FutureProvider<List<PromotionEntity>>((ref) async {
+final promotionsProvider = FutureProvider.family<List<PromotionEntity>, int>((
+  ref,
+  placeId,
+) async {
   ref.watch(promotionsRefreshTickProvider);
-  return ref.read(loadPromosUseCaseProvider)();
+  return ref.read(loadPromosUseCaseProvider)(placeId: placeId);
 });
 
 final menusByPlaceProvider = FutureProvider.family<List<MenuEntity>, int>((
@@ -115,8 +118,10 @@ class PromotionsActionNotifier extends AsyncNotifier<void> {
   Future<void> build() async {}
 
   Future<int> createPromo({
+
     required String description,
     required bool unlimited,
+    required int placeId,
     int? limit,
     required DateTime dateStart,
     required DateTime dateEnd,
@@ -125,6 +130,7 @@ class PromotionsActionNotifier extends AsyncNotifier<void> {
     state = const AsyncLoading();
     try {
       final promoId = await ref.read(createPromoUseCaseProvider)(
+        placeId: placeId,
         description: description,
         unlimited: unlimited,
         limit: limit,

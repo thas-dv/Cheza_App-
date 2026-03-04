@@ -11,7 +11,7 @@ import 'package:cheza_app/core/storage/local_party_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final dashboardControllerProvider =
-    StateNotifierProvider<DashboardController, DashboardState>((ref) {
+     StateNotifierProvider.autoDispose<DashboardController, DashboardState>((ref) {
   return DashboardController(ref);
 });
 

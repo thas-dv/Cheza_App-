@@ -5,7 +5,7 @@ class LoadPromosUseCase {
   const LoadPromosUseCase(this._repository);
 
   final PromotionsRepository _repository;
-Future<List<PromotionEntity>> call({int? partyId}) {
-    return _repository.loadPromos(partyId: partyId);
+Future<List<PromotionEntity>> call({required int placeId, int? partyId}) {
+    return _repository.loadPromos(placeId: placeId, partyId: partyId);
   }
 }

@@ -4,6 +4,7 @@ abstract class PromotionsRepository {
   Future<int> createPromo({
     required String description,
     required bool unlimited,
+    required int placeId,
     int? limit,
     required DateTime dateStart,
     required DateTime dateEnd,
@@ -22,7 +23,7 @@ abstract class PromotionsRepository {
     required int partyId,
   });
 
- Future<List<PromotionEntity>> loadPromos({int? partyId});
+  Future<List<PromotionEntity>> loadPromos({required int placeId, int? partyId});
 
 //  Future<List<MenuItemOptionEntity>> getMenuItemsByMenu({required int menuId});
 

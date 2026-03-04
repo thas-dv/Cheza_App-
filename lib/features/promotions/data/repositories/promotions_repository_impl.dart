@@ -16,6 +16,7 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
 
   @override
   Future<void> addPromoItem({
+
     required int promoId,
     required int itemId,
     required bool isFreeOffer,
@@ -41,6 +42,7 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
 
   @override
   Future<int> createPromo({
+    required int placeId,
     required String description,
     required bool unlimited,
     int? limit,
@@ -48,6 +50,7 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
     required DateTime dateEnd,
   }) {
     return _dataSource.createPromo(
+      placeId: placeId,
       description: description,
       unlimited: unlimited,
       limit: limit,
@@ -73,8 +76,8 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
   // }
 
   @override
-   Future<List<PromotionEntity>> loadPromos({int? partyId}) async {
-    final raw = await _dataSource.loadPromos(partyId: partyId);
+    Future<List<PromotionEntity>> loadPromos({required int placeId, int? partyId}) async {
+    final raw = await _dataSource.loadPromos(placeId: placeId, partyId: partyId);
 
     return raw.map((promo) {
       final items = List<Map<String, dynamic>>.from(promo['items'] ?? []);

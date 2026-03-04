@@ -355,8 +355,7 @@ class SupabaseServiceClientel {
             id
           )
         ''')
-          .eq('party_id', partyId)
-            .eq('party_id', partyId);
+          .eq('party_id', partyId);
 
       final data = await _attendanceQueryWithPresence(baseQuery);
 
@@ -462,11 +461,12 @@ class SupabaseServiceClientel {
 
     try {
       //  2. Guard AUTOUR (OBLIGATOIRE sur Windows)
-      final res = await supabase
+      final query = supabase
           .from('parties_attandance')
           .select('id')
-          .eq('party_id', partyId)
-          .eq('is_present', true);
+          .eq('party_id', partyId);
+
+      final res = await _attendanceQueryWithPresence(query);
 
       return res.length;
     } catch (_) {

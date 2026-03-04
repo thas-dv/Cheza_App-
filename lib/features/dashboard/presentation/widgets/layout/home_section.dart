@@ -1,8 +1,11 @@
 import 'package:cheza_app/features/dashboard/presentation/providers/dashboard_providers.dart';
-import 'package:cheza_app/features/dashboard/presentation/widgets/hero_place_card.dart';
+// import 'package:cheza_app/features/dashboard/presentation/widgets/hero_place_card.dart';
 import 'package:cheza_app/widgets/stat_card.dart' show StatCard;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+
+
 
 class HomeSection extends ConsumerWidget {
   final String placeName;

@@ -12,11 +12,13 @@ class PromotionsSupabaseDataSource {
     int? limit,
     required DateTime dateStart,
     required DateTime dateEnd,
+    required int placeId,
   }) async {
     final promo = await _client
         .from('promos')
         .insert({
           'promo_desc': description,
+          'place_id': placeId,
           'unlimited': unlimited,
           'limite': unlimited ? null : limit,
           'date_start': dateStart.toIso8601String(),
@@ -59,7 +61,10 @@ class PromotionsSupabaseDataSource {
     });
   }
 
-  Future<List<Map<String, dynamic>>> loadPromos({int? partyId}) async {
+Future<List<Map<String, dynamic>>> loadPromos({
+    required int placeId,
+    int? partyId,
+  }) async {
   final response = partyId == null
       ? await _client
           .from('promos')
@@ -83,7 +88,7 @@ class PromotionsSupabaseDataSource {
           price
         )
       )
-    """)
+    """).eq('place_id', placeId)
           .order('date_start', ascending: false)
       : await _client
           .from('promos')
@@ -111,7 +116,7 @@ item_name,
         )
 
  )
-    """)
+    """).eq('place_id', placeId)
           .eq('promo_party.party_id', partyId)
           .order('date_start', ascending: false);
 
