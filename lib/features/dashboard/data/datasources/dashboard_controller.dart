@@ -52,6 +52,7 @@ class DashboardController extends StateNotifier<DashboardState> {
         placeId: place.id,
         placeName: place.name,
         placeAddress: place.address,
+        placeImageUrl: place.photoUrl,
         placeDescription: place.typePlace,
         adminName: admin.name,
         placeOpenedFromDb: place.isOpened,
@@ -83,7 +84,7 @@ class DashboardController extends StateNotifier<DashboardState> {
       ref.read(dashboardStatsProvider.notifier).clear();
 
       state = state.copyWith(
-        isOpen: false,
+        isOpen: state.placeOpenedFromDb,
         activePartyId: null,
         partyName: '',
         openTime: null,

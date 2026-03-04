@@ -30,7 +30,7 @@ class HeroPlaceCard extends StatelessWidget {
       child: Stack(
         children: [
           AspectRatio(
-            aspectRatio: isMobile ? 16 / 11 : 16 / 7,
+            aspectRatio: isMobile ? 4 / 3 : 16 / 7,
             child: (imageUrl != null && imageUrl!.isNotEmpty)
                 ? Image.network(
                     imageUrl!,
@@ -79,9 +79,9 @@ class HeroPlaceCard extends StatelessWidget {
           ),
 
           Positioned(
-            left: 24,
-            right: 24,
-            bottom: 18,
+            left: isMobile ? 14 : 24,
+            right: isMobile ? 14 : 24,
+            bottom: isMobile ? 14 : 18,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -89,7 +89,7 @@ class HeroPlaceCard extends StatelessWidget {
                   placeName,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: isMobile ? 22 : 30,
+                    fontSize: isMobile ? 24 : 30,
                     fontWeight: FontWeight.w800,
                   ),
                 ),

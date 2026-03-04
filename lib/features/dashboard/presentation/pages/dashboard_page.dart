@@ -2232,11 +2232,12 @@ class DashboardPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     DashboardState state,
+    bool isLarge,
   ) {
     return Sidebar(
       selectedIndex: state.selectedIndex,
       onSelect: (index) {
-        if (Navigator.canPop(context)) {
+        if (!isLarge) {
           Navigator.of(context).pop();
         }
         ref.read(dashboardControllerProvider.notifier).setSelectedIndex(index);
@@ -2264,10 +2265,12 @@ class DashboardPage extends ConsumerWidget {
           child: NetworkToastWrapper(
             child: Scaffold(
               backgroundColor: AppColors.background,
-              drawer: !isLarge ? _buildSidebar(context, ref, state) : null,
+              drawer: !isLarge
+                  ? _buildSidebar(context, ref, state, isLarge)
+                  : null,
               body: Row(
                 children: [
-                  if (isLarge) _buildSidebar(context, ref, state),
+                  if (isLarge) _buildSidebar(context, ref, state, isLarge),
                   Expanded(
                     child: Column(
                       children: [
@@ -2281,6 +2284,8 @@ class DashboardPage extends ConsumerWidget {
                               .toInt(),
                           onSelect: notifier.setSelectedIndex,
                           onToggleStatus: notifier.togglePlaceStatus,
+                          onMenuPressed: () =>
+                              Scaffold.of(context).openDrawer(),
                         ),
 
                         const Divider(
