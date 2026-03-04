@@ -22,7 +22,7 @@ abstract class PromotionsRepository {
     required int partyId,
   });
 
-  Future<List<PromotionEntity>> loadPromos({required int partyId});
+ Future<List<PromotionEntity>> loadPromos({int? partyId});
 
 //  Future<List<MenuItemOptionEntity>> getMenuItemsByMenu({required int menuId});
 

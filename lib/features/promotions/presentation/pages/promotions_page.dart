@@ -20,28 +20,23 @@ class PromotionsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (activePartyId == null || placeId == null) {
+    if (placeId == null) {
       return const Center(
-        child: Text(
-          'Aucune party active pour gérer les promotions.',
-          style: TextStyle(color: Colors.grey),
-        ),
+        child: Text('Lieu introuvable', style: TextStyle(color: Colors.grey)),
       );
     }
 
-    final promotionsAsync = ref.watch(
-      promotionsByPartyProvider(activePartyId!),
-    );
+    final promotionsAsync = ref.watch(promotionsProvider);
     final actionState = ref.watch(promotionsActionProvider);
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: Image.asset(
-            'assets/images/fondprincipal.png',
-            fit: BoxFit.cover,
-          ),
-        ),
+        // Positioned.fill(
+        //   child: Image.asset(
+        //     'assets/images/fondprincipal.png',
+        //     fit: BoxFit.cover,
+        //   ),
+        // ),
         Positioned.fill(
           child: Container(color: const Color(0xFF0B1120).withOpacity(0.85)),
         ),
@@ -107,7 +102,8 @@ class PromotionsPage extends ConsumerWidget {
                               _openEditPromoDialog(context, ref, promo),
                           onDelete: () =>
                               _confirmDeletePromo(context, ref, promo),
-                          onAssing: () => _showAssignComingSoon(context),
+                          onAssing: () =>
+                              _linkPromoToActiveParty(context, ref, promo.id),
                         );
                       },
                     );
@@ -146,12 +142,31 @@ class PromotionsPage extends ConsumerWidget {
     );
   }
 
-  void _showAssignComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("L'attribution de promotion arrive bientôt."),
-      ),
-    );
+  Future<void> _linkPromoToActiveParty(
+    BuildContext context,
+    WidgetRef ref,
+    int promoId,
+  ) async {
+    if (activePartyId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aucune fête active à lier.')),
+      );
+      return;
+    }
+    try {
+      await ref
+          .read(promotionsActionProvider.notifier)
+          .linkPromoToParty(promoId: promoId, partyId: activePartyId!);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Promotion liée à la fête active.')),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de lier cette promotion.')),
+      );
+    }
   }
 
   String formatDiscount(String type, double value) {
@@ -511,6 +526,7 @@ class PromotionsPage extends ConsumerWidget {
     final formKey = GlobalKey<FormState>();
     final descCtrl = TextEditingController();
     final limitCtrl = TextEditingController();
+    bool linkToActiveParty = activePartyId != null;
     bool forEveryone = true;
     bool isSaving = false;
     DateTime startDate = DateTime.now();
@@ -626,7 +642,21 @@ class PromotionsPage extends ConsumerWidget {
                                       return null;
                                     },
                                   ),
-
+                                const SizedBox(height: 8),
+                                SwitchListTile(
+                                  value: linkToActiveParty,
+                                  onChanged: activePartyId == null
+                                      ? null
+                                      : (value) => setStateDialog(() {
+                                          linkToActiveParty = value;
+                                        }),
+                                  title: const Text('Lié à la fête'),
+                                  subtitle: Text(
+                                    activePartyId == null
+                                        ? 'Aucune fête active disponible'
+                                        : 'Associer cette promotion à la fête active',
+                                  ),
+                                ),
                                 const SizedBox(height: 16),
 
                                 ListTile(
@@ -688,7 +718,6 @@ class PromotionsPage extends ConsumerWidget {
                                     }
 
                                     final partyId = activePartyId;
-                                    if (partyId == null) return;
 
                                     setStateDialog(() {
                                       isSaving = true;
@@ -699,7 +728,7 @@ class PromotionsPage extends ConsumerWidget {
                                           .read(
                                             promotionsActionProvider.notifier,
                                           )
-                                          .createAndAttachPromo(
+                                          .createPromo(
                                             description: descCtrl.text.trim(),
                                             unlimited: forEveryone,
                                             limit: forEveryone
@@ -1181,6 +1210,13 @@ class _PromotionCard extends StatelessWidget {
                 icon: const Icon(Icons.add_shopping_cart, size: 18),
                 label: const Text('Ajouter article'),
               ),
+              SizedBox(width: 10),
+              TextButton.icon(
+                onPressed: () => {},
+                label: Text("Lier à la fête"),
+                icon: const Icon(Icons.abc),
+              ),
+
               SizedBox(width: 10),
               TextButton.icon(
                 onPressed: onAssing,

@@ -220,13 +220,18 @@ class SupabaseServiceParties {
   static Future<List<Map<String, dynamic>>> fetchClosedPartiesForPlace(
     int placeId,
   ) async {
-    final res = await supabase
-        .from('parties')
-        .select()
-        .eq('place_id', placeId)
-        .eq('active', false)
-        .order('date_closed', ascending: false);
+    try {
+      final res = await supabase
+          .from('parties')
+          .select('id, name_party, date_started, date_closed')
+          .eq('place_id', placeId)
+          .eq('active', false)
+          .order('date_closed', ascending: false);
 
-    return List<Map<String, dynamic>>.from(res);
+      return List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      debugPrint('❌ fetchClosedPartiesForPlace error: $e');
+      return [];
+    }
   }
 }

@@ -9,6 +9,7 @@ class DashboardLayout extends StatelessWidget {
   final bool isOpen;
   final bool isStatusUpdating;
   final VoidCallback onToggleStatus;
+  final VoidCallback onLogout;
 
   const DashboardLayout({
     super.key,
@@ -18,6 +19,7 @@ class DashboardLayout extends StatelessWidget {
     required this.isOpen,
     required this.isStatusUpdating,
     required this.onToggleStatus,
+    required this.onLogout,
   });
 
   @override
@@ -28,20 +30,25 @@ class DashboardLayout extends StatelessWidget {
       backgroundColor: const Color(0xFF0B1220),
 
       drawer: !isDesktop
-          ? Sidebar(selectedIndex: selectedIndex, onSelect: onSelect)
+          ? Sidebar(
+              selectedIndex: selectedIndex,
+              onSelect: onSelect,
+              onLogout: onLogout,
+            )
           : null,
 
       body: Row(
         children: [
-          // SIDEBAR DESKTOP
           if (isDesktop)
-            Sidebar(selectedIndex: selectedIndex, onSelect: onSelect),
+            Sidebar(
+              selectedIndex: selectedIndex,
+              onSelect: onSelect,
+              onLogout: onLogout,
+            ),
 
-          // CONTENU PRINCIPAL
           Expanded(
             child: Column(
               children: [
-                // ✅ TOPBAR BIEN APPELÉ ICI
                 TopBar(
                   isLargeScreen: isDesktop,
                   isOpen: isOpen,
@@ -53,7 +60,6 @@ class DashboardLayout extends StatelessWidget {
 
                 const Divider(height: 1),
 
-                // BODY
                 Expanded(child: child),
               ],
             ),

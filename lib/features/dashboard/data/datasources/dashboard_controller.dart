@@ -3,16 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cheza_app/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/layout/dashboard_state.dart';
-import 'package:cheza_app/providers/party_providers.dart'
-    show clienteleProvider;
+import 'package:cheza_app/providers/party_providers.dart' show clienteleProvider;
 import 'package:cheza_app/realtime/dashboard_realtime_controller.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';
 import 'package:cheza_app/features/auth/presentation/providers/admin_provider.dart';
+import 'package:cheza_app/core/storage/local_party_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 final dashboardControllerProvider =
     StateNotifierProvider<DashboardController, DashboardState>((ref) {
-      return DashboardController(ref);
-    });
+  return DashboardController(ref);
+});
 
 class DashboardController extends StateNotifier<DashboardState> {
   final Ref ref;
@@ -40,7 +41,8 @@ class DashboardController extends StateNotifier<DashboardState> {
     state = state.copyWith(isLoading: true, hasNetworkError: false);
 
     try {
-      final place = await ref.read(dashboardRepositoryProvider).fetchMyPlace();
+      final place =
+          await ref.read(dashboardRepositoryProvider).fetchMyPlace();
 
       /// image
       ref.read(placePhotoProvider.notifier).state = place.photoUrl;
@@ -54,6 +56,7 @@ class DashboardController extends StateNotifier<DashboardState> {
         placeOpenedFromDb: place.isOpened,
         isOpen: place.isOpened,
       );
+
       await _loadAdminSafely();
       await refreshActiveParty();
     } catch (_) {
@@ -63,16 +66,22 @@ class DashboardController extends StateNotifier<DashboardState> {
     }
   }
 
-  // ================= ACTIVE PARTY =================
+  // ================= ADMIN =================
+
   Future<void> _loadAdminSafely() async {
     try {
-      final admin = await ref.read(dashboardRepositoryProvider).fetchMyAdmin();
+      final admin =
+          await ref.read(dashboardRepositoryProvider).fetchMyAdmin();
+
       ref.read(adminProvider.notifier).state = admin;
+
       state = state.copyWith(adminName: admin.name);
     } catch (_) {
-      // Ne jamais bloquer le chargement du lieu si admin indisponible.
+      /// ne bloque jamais le chargement du lieu
     }
   }
+
+  // ================= ACTIVE PARTY =================
 
   Future<void> refreshActiveParty() async {
     if (state.placeId == null) return;
@@ -88,6 +97,9 @@ class DashboardController extends StateNotifier<DashboardState> {
       ref.read(activePartyIdProvider.notifier).state = null;
       ref.read(dashboardStatsProvider.notifier).clear();
       ref.read(clienteleProvider.notifier).clear();
+
+      await _persistLocalPartySession(isOpen: false);
+
       state = state.copyWith(
         isOpen: state.placeOpenedFromDb,
         activePartyId: null,
@@ -106,6 +118,8 @@ class DashboardController extends StateNotifier<DashboardState> {
     /// Fête active
     ref.read(activePartyIdProvider.notifier).state = party.id;
 
+    await _persistLocalPartySession(isOpen: true);
+
     state = state.copyWith(
       isOpen: true,
       activePartyId: party.id,
@@ -121,33 +135,39 @@ class DashboardController extends StateNotifier<DashboardState> {
   // ================= TOGGLE =================
 
   Future<bool> togglePlaceStatus() async {
+    if (state.isOpen) {
+      return closeCurrentParty();
+    }
+
+    final now = DateTime.now();
+
+    return openPlaceWithSchedule(
+      openedAt: now,
+      closedAt: now.add(const Duration(hours: 12)),
+    );
+  }
+
+  Future<bool> openPlaceWithSchedule({
+    required DateTime openedAt,
+    required DateTime closedAt,
+  }) async {
     if (state.isStatusUpdating || state.placeId == null) return false;
+
+    if (!closedAt.isAfter(openedAt)) return false;
 
     state = state.copyWith(isStatusUpdating: true);
 
     try {
-      if (state.isOpen && state.activePartyId != null) {
-        final closeParty = ref.read(closePartyUseCaseProvider);
+      final createParty = ref.read(createPartyUseCaseProvider);
 
-        final closed = await closeParty(
-          partyId: state.activePartyId!,
-          closedAt: DateTime.now(),
-        );
+      final createdId = await createParty(
+        placeId: state.placeId!,
+        name: 'Session ${state.placeName} - ${openedAt.day}/${openedAt.month}',
+        openedAt: openedAt,
+        closedAt: closedAt,
+      );
 
-        if (!closed) return false;
-      } else {
-        final createParty = ref.read(createPartyUseCaseProvider);
-        final now = DateTime.now();
-
-        final createdId = await createParty(
-          placeId: state.placeId!,
-          name: 'Session ${state.placeName} - ${now.day}/${now.month}',
-          openedAt: now,
-          closedAt: now.add(const Duration(hours: 12)),
-        );
-
-        if (createdId == null) return false;
-      }
+      if (createdId == null) return false;
 
       await refreshActiveParty();
       return true;
@@ -158,10 +178,50 @@ class DashboardController extends StateNotifier<DashboardState> {
     }
   }
 
+  Future<bool> closeCurrentParty() async {
+    if (state.isStatusUpdating || state.activePartyId == null) return false;
+
+    state = state.copyWith(isStatusUpdating: true);
+
+    try {
+      final closeParty = ref.read(closePartyUseCaseProvider);
+
+      final closed = await closeParty(
+        partyId: state.activePartyId!,
+        closedAt: DateTime.now(),
+      );
+
+      if (!closed) return false;
+
+      await refreshActiveParty();
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      state = state.copyWith(isStatusUpdating: false);
+    }
+  }
+
+  // ================= LOCAL STORAGE =================
+
+  Future<void> _persistLocalPartySession({required bool isOpen}) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final placeId = state.placeId;
+
+    if (userId == null || placeId == null) return;
+
+    await LocalPartyStorage.setPartySession(
+      isOpen: isOpen,
+      userId: userId,
+      placeId: placeId,
+    );
+  }
+
   // ================= STATS =================
 
   Future<void> _refreshStats(int partyId) async {
-    final stats = await ref.read(loadDashboardStatsUseCaseProvider)(partyId);
+    final stats =
+        await ref.read(loadDashboardStatsUseCaseProvider)(partyId);
 
     state = state.copyWith(
       visitors: stats.visitors,

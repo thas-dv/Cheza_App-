@@ -22,7 +22,6 @@ import 'package:cheza_app/features/menus/data/repositories/menu_repository_impl.
 import 'package:cheza_app/features/menus/domain/entities/menu_entity.dart';
 import 'package:cheza_app/features/menus/domain/usecases/get_menus_by_place_usecase.dart';
 
-
 /// 🔥 Refresh Trigger
 final promotionsRefreshTickProvider = StateProvider<int>((ref) => 0);
 
@@ -77,11 +76,10 @@ final getMenuItemsByMenuUseCaseProvider = Provider(
 
 /// 🔥 Providers
 
-final promotionsByPartyProvider =
-    FutureProvider.family<List<PromotionEntity>, int>((ref, partyId) async {
-      ref.watch(promotionsRefreshTickProvider);
-      return ref.read(loadPromosUseCaseProvider)(partyId: partyId);
-    });
+final promotionsProvider = FutureProvider<List<PromotionEntity>>((ref) async {
+  ref.watch(promotionsRefreshTickProvider);
+  return ref.read(loadPromosUseCaseProvider)();
+});
 
 final menusByPlaceProvider = FutureProvider.family<List<MenuEntity>, int>((
   ref,
@@ -116,13 +114,13 @@ class PromotionsActionNotifier extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
 
-  Future<int> createAndAttachPromo({
+  Future<int> createPromo({
     required String description,
     required bool unlimited,
     int? limit,
     required DateTime dateStart,
     required DateTime dateEnd,
-    required int partyId,
+    int? partyId,
   }) async {
     state = const AsyncLoading();
     try {
@@ -134,10 +132,12 @@ class PromotionsActionNotifier extends AsyncNotifier<void> {
         dateEnd: dateEnd,
       );
 
-      await ref.read(attachPromoToPartyUseCaseProvider)(
-        promoId: promoId,
-        partyId: partyId,
-      );
+      if (partyId != null) {
+        await ref.read(attachPromoToPartyUseCaseProvider)(
+          promoId: promoId,
+          partyId: partyId,
+        );
+      }
 
       ref.read(promotionsRefreshTickProvider.notifier).state++;
       state = const AsyncData(null);
@@ -146,6 +146,20 @@ class PromotionsActionNotifier extends AsyncNotifier<void> {
       state = AsyncError(error, stackTrace);
       rethrow;
     }
+  }
+
+  Future<void> linkPromoToParty({
+    required int promoId,
+    required int partyId,
+  }) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(attachPromoToPartyUseCaseProvider)(
+        promoId: promoId,
+        partyId: partyId,
+      );
+      ref.read(promotionsRefreshTickProvider.notifier).state++;
+    });
   }
 
   Future<void> addItemToPromo({

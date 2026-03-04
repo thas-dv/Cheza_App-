@@ -7,7 +7,21 @@ final supabase = Supabase.instance.client;
 
 class SupabaseServiceClientel {
   ///////////////////////////////////////////////////////
+  static const _presenceColumns = ['is_present', 'is_presente'];
 
+  static Future<List<dynamic>> _attendanceQueryWithPresence(
+    PostgrestFilterBuilder<dynamic> query,
+  ) async {
+    for (final column in _presenceColumns) {
+      try {
+        final result = await query.eq(column, true);
+        return result as List<dynamic>;
+      } catch (_) {
+        // essaie la prochaine colonne de présence
+      }
+    }
+    return <dynamic>[];
+  }
   // static Future<Map<String, dynamic>> fetchClientDetails(
   //   String userId,
   //   int attendeeId,
@@ -325,7 +339,7 @@ class SupabaseServiceClientel {
 
     try {
       // 2. Requête protégée
-      final data = await supabase
+      final baseQuery = supabase
           .from('parties_attandance')
           .select('''
           id,
@@ -342,7 +356,9 @@ class SupabaseServiceClientel {
           )
         ''')
           .eq('party_id', partyId)
-          .eq('is_present', true);
+            .eq('party_id', partyId);
+
+      final data = await _attendanceQueryWithPresence(baseQuery);
 
       final list = data.map<Map<String, dynamic>>((att) {
         final profile = att['profiles'];

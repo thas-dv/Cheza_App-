@@ -3,6 +3,7 @@ import 'package:cheza_app/features/auth/domain/usecases/get_startup_destination_
 import 'package:cheza_app/pages/login.dart';
 import 'package:cheza_app/pages/start.dart';
 import 'package:flutter/material.dart';
+import 'package:cheza_app/pages/dashboard/dashboard_page.dart';
 
 class AuthGatePage extends StatefulWidget {
   const AuthGatePage({
@@ -44,7 +45,8 @@ class _AuthGatePageState extends State<AuthGatePage> {
           return const LoginAdminPage();
         }
         return switch (snapshot.data!) {
-          StartupDestination.dashboard => const WelcomePage(),
+                StartupDestination.welcome => const WelcomePage(),
+          StartupDestination.dashboard => const DashboardPage(),
           StartupDestination.login => const LoginAdminPage(),
         };
       },

@@ -1,4 +1,3 @@
-
 import 'package:cheza_app/pages/client_detail_page.dart';
 // import 'package:cheza_app/providers/clientele_provider.dart';
 import 'package:cheza_app/providers/party_providers.dart';
@@ -80,8 +79,8 @@ class _ClienteleTabState extends ConsumerState<ClienteleTab> {
                 onPressed: widget.onBack,
               ),
               const SizedBox(width: 8),
-              const Text(
-                "Visiteurs",
+              Text(
+                totalClients > 1 ? "Visiteurs présents" : "Visiteur présent",
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
             ],
@@ -111,7 +110,7 @@ class _ClienteleTabState extends ConsumerState<ClienteleTab> {
 
         // ================= LISTE =================
         Expanded(
-          child: clients.isEmpty && !showOfflineFallback
+          child: totalClients == 0
               ? Center(
                   child: Text(
                     "Aucun visiteur connecté",

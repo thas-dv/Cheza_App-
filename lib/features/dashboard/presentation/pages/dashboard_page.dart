@@ -2225,18 +2225,24 @@ import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/history_t
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/menu_tab.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/settings_tab.dart';
 import 'package:cheza_app/features/promotions/presentation/pages/promotions_page.dart';
+import 'package:cheza_app/pages/login.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DashboardPage extends ConsumerWidget {
   static const _topTabs = [0, 1, 2, 3];
+  static final GlobalKey<ScaffoldState> _scaffoldKey =
+      GlobalKey<ScaffoldState>();
   const DashboardPage({super.key});
   Widget _buildSidebar(
     BuildContext context,
     WidgetRef ref,
     DashboardState state,
     bool isLarge,
+     DashboardController notifier,
   ) {
     return Sidebar(
       selectedIndex: state.selectedIndex,
+        onLogout: () => _logout(context, notifier, state),
       onSelect: (index) {
         if (!isLarge) {
           Navigator.of(context).pop();
@@ -2265,13 +2271,14 @@ class DashboardPage extends ConsumerWidget {
           },
           child: NetworkToastWrapper(
             child: Scaffold(
+              key: _scaffoldKey,
               backgroundColor: AppColors.background,
               drawer: !isLarge
-                  ? _buildSidebar(context, ref, state, isLarge)
+                   ? _buildSidebar(context, ref, state, isLarge, notifier)
                   : null,
               body: Row(
                 children: [
-                  if (isLarge) _buildSidebar(context, ref, state, isLarge),
+                    if (isLarge) _buildSidebar(context, ref, state, isLarge, notifier),
                   Expanded(
                     child: Column(
                       children: [
@@ -2284,10 +2291,10 @@ class DashboardPage extends ConsumerWidget {
                               .clamp(0, 3)
                               .toInt(),
                           onSelect: notifier.setSelectedIndex,
-                             onToggleStatus: () =>
+                          onToggleStatus: () =>
                               _onToggleStatus(context, notifier, state.isOpen),
                           onMenuPressed: () =>
-                              Scaffold.of(context).openDrawer(),
+                              _scaffoldKey.currentState?.openDrawer(),
                         ),
 
                         const Divider(
@@ -2298,11 +2305,11 @@ class DashboardPage extends ConsumerWidget {
                         Expanded(
                           child: state.isLoading
                               ? const Center(child: CircularProgressIndicator())
-                               : state.hasNetworkError
-                                  ? NetworkErrorView(
-                                      onRetry: notifier.loadInitialData,
-                                    )
-                                  : _buildSelectedPage(state, notifier),
+                              : state.hasNetworkError
+                              ? NetworkErrorView(
+                                  onRetry: notifier.loadInitialData,
+                                )
+                              : _buildSelectedPage(state, notifier),
                         ),
                       ],
                     ),
@@ -2342,6 +2349,21 @@ class DashboardPage extends ConsumerWidget {
       },
     );
   }
+  Future<void> _logout(
+    BuildContext context,
+    DashboardController notifier,
+    DashboardState state,
+  ) async {
+    if (state.isOpen && state.activePartyId != null) {
+      await notifier.closeCurrentParty();
+    }
+    await Supabase.instance.client.auth.signOut();
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginAdminPage()),
+      (_) => false,
+    );
+  }
   Future<void> _onToggleStatus(
     BuildContext context,
     DashboardController notifier,
@@ -2359,7 +2381,7 @@ class DashboardPage extends ConsumerWidget {
           content: Text(
             isOpen
                 ? 'La session active sera fermée immédiatement.'
-                : 'Une nouvelle session sera créée automatiquement.',
+                : 'Une nouvelle session sera créée avec vos dates.',
             style: const TextStyle(color: Colors.white70),
           ),
           actions: [
@@ -2369,7 +2391,7 @@ class DashboardPage extends ConsumerWidget {
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(isOpen ? 'Fermer' : 'Ouvrir'),
+              child: Text(isOpen ? 'Fermer' : 'Continuer'),
             ),
           ],
         );
@@ -2378,16 +2400,57 @@ class DashboardPage extends ConsumerWidget {
 
     if (confirmed != true) return;
 
-    final ok = await notifier.togglePlaceStatus();
+ bool ok;
+    if (isOpen) {
+      ok = await notifier.closeCurrentParty();
+      if (ok && context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginAdminPage()),
+          (_) => false,
+        );
+      }
+    } else {
+      final schedule = await _pickPartySchedule(context);
+      if (schedule == null) return;
+      ok = await notifier.openPlaceWithSchedule(
+        openedAt: schedule.$1,
+        closedAt: schedule.$2,
+      );
+    }
 
     if (!context.mounted) return;
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Action impossible, veuillez réessayer.'),
-        ),
+        const SnackBar(content: Text('Action impossible, veuillez réessayer.')),
       );
     }
+  }
+
+  Future<(DateTime, DateTime)?> _pickPartySchedule(BuildContext context) async {
+    final now = DateTime.now();
+
+    Future<DateTime?> pickDateTime(DateTime initial) async {
+      final date = await showDatePicker(
+        context: context,
+        initialDate: initial,
+        firstDate: now.subtract(const Duration(days: 1)),
+        lastDate: now.add(const Duration(days: 365)),
+      );
+      if (date == null) return null;
+      final time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(initial),
+      );
+      if (time == null) return null;
+      return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    }
+
+    final openedAt = await pickDateTime(now);
+    if (openedAt == null) return null;
+    final closedAt = await pickDateTime(openedAt.add(const Duration(hours: 12)));
+    if (closedAt == null || !closedAt.isAfter(openedAt)) return null;
+
+    return (openedAt, closedAt);
   }
   // À ajouter à l'intérieur de ta classe DashboardPage
   // Widget _buildSelectedPage(int index) {

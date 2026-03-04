@@ -59,68 +59,97 @@ class PromotionsSupabaseDataSource {
     });
   }
 
-  Future<List<Map<String, dynamic>>> loadPromos({required int partyId}) async {
-    final response = await _client
-        .from('promos')
-        .select('''
+  Future<List<Map<String, dynamic>>> loadPromos({int? partyId}) async {
+  final response = partyId == null
+      ? await _client
+          .from('promos')
+          .select("""
+      id,
+      promo_desc,
+      unlimited,
+      limite,
+      date_start,
+      date_end,
+      items:promo_items (
         id,
-        promo_desc,
-        unlimited,
-        limite,
-        date_start,
-        date_end,
-        promo_party!inner(party_id),
-        items:promo_items (
+        promo_id,
+        menu_item_id,
+        is_free,
+        discount_type,
+        discount_value,
+        menu_items (
           id,
-          promo_id,
-          menu_item_id,
-          is_free,
-          discount_type,
-          discount_value,
-          menu_items (
-            id,
-            item_name,
-            price
-          )
+          item_name,
+          price
         )
-      ''')
-        .eq('promo_party.party_id', partyId)
-        .order('date_start', ascending: false);
+      )
+    """)
+          .order('date_start', ascending: false)
+      : await _client
+          .from('promos')
+          .select("""
+      id,
+      promo_desc,
+      unlimited,
+      limite,
+      date_start,
+      date_end,
+      promo_party!inner(party_id),
+      items:promo_items (
+        id,
 
-    final promos = List<Map<String, dynamic>>.from(response);
 
-    return promos.map((promo) {
-      final rawItems = List<Map<String, dynamic>>.from(
-        promo['items'] ?? const [],
-      );
+         promo_id,
+        menu_item_id,
+        is_free,
+        discount_type,
+        discount_value,
+        menu_items (
+          id,
+item_name,
+          price
+        )
 
-      final mappedItems = rawItems.map((item) {
-        final menu = (item['menu_items'] as Map<String, dynamic>?) ?? const {};
+ )
+    """)
+          .eq('promo_party.party_id', partyId)
+          .order('date_start', ascending: false);
 
-        return {
-          'id': item['id'],
-          'promo_id': item['promo_id'],
-          'menu_item_id': item['menu_item_id'],
-          'is_free': item['is_free'],
-          'discount_type': item['discount_type'],
-          'discount_value': item['discount_value'],
-          'item_name': menu['item_name'],
-          'item_price': menu['price'],
-        };
-      }).toList();
+  final promos = List<Map<String, dynamic>>.from(response);
+
+  return promos.map((promo) {
+    final rawItems = List<Map<String, dynamic>>.from(
+      promo['items'] ?? const [],
+    );
+
+    final mappedItems = rawItems.map((item) {
+      final menu = (item['menu_items'] as Map<String, dynamic>?) ?? const {};
+
 
       return {
-        'id': promo['id'],
-        'promo_desc': promo['promo_desc'],
-        'unlimited': promo['unlimited'],
-        'limite': promo['limite'],
-        'date_start': promo['date_start'],
-        'date_end': promo['date_end'],
-        'items': mappedItems,
+         'id': item['id'],
+        'promo_id': item['promo_id'],
+        'menu_item_id': item['menu_item_id'],
+        'is_free': item['is_free'],
+        'discount_type': item['discount_type'],
+        'discount_value': item['discount_value'],
+        'item_name': menu['item_name'],
+        'item_price': menu['price'],
       };
     }).toList();
-  }
+  
 
+    return {
+      'id': promo['id'],
+      'promo_desc': promo['promo_desc'],
+      'unlimited': promo['unlimited'],
+      'limite': promo['limite'],
+      'date_start': promo['date_start'],
+      'date_end': promo['date_end'],
+      'items': mappedItems,
+    };
+  }).toList();
+}
   Future<void> updatePromo({
     required int promoId,
     required String description,

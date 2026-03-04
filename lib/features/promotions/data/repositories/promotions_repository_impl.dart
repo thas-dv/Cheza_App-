@@ -73,7 +73,7 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
   // }
 
   @override
-  Future<List<PromotionEntity>> loadPromos({required int partyId}) async {
+   Future<List<PromotionEntity>> loadPromos({int? partyId}) async {
     final raw = await _dataSource.loadPromos(partyId: partyId);
 
     return raw.map((promo) {

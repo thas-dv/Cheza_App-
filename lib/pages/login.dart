@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:cheza_app/core/storage/local_party_storage.dart';
 import 'package:cheza_app/pages/dashboard/dashboard_page.dart';
 import 'package:cheza_app/pages/register_place.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';
@@ -672,6 +673,12 @@ class _LoginAdminPageState extends State<LoginAdminPage>
                                         .maybeSingle();
 
                                     if (admin == null) throw Exception();
+                                                                        await LocalPartyStorage.clearSession();
+                                    await LocalPartyStorage.setPartySession(
+                                      isOpen: false,
+                                      userId: user.id,
+                                      placeId: admin['place_id'] as int,
+                                    );
 
                                     // 🔥 TRANSITION SMOOTH VERS DASHBOARD
                                     Navigator.pushReplacement(

@@ -1,1 +1,1 @@
-enum StartupDestination { dashboard, login }
+enum StartupDestination { welcome, dashboard, login }
