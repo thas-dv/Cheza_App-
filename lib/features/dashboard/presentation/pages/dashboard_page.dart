@@ -2220,6 +2220,7 @@ import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/clientele
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/note_tab.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/posts_tab.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';
+import 'package:cheza_app/widgets/network_error.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/history_tab.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/menu_tab.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/settings_tab.dart';
@@ -2283,7 +2284,8 @@ class DashboardPage extends ConsumerWidget {
                               .clamp(0, 3)
                               .toInt(),
                           onSelect: notifier.setSelectedIndex,
-                          onToggleStatus: notifier.togglePlaceStatus,
+                             onToggleStatus: () =>
+                              _onToggleStatus(context, notifier, state.isOpen),
                           onMenuPressed: () =>
                               Scaffold.of(context).openDrawer(),
                         ),
@@ -2296,7 +2298,11 @@ class DashboardPage extends ConsumerWidget {
                         Expanded(
                           child: state.isLoading
                               ? const Center(child: CircularProgressIndicator())
-                              : _buildSelectedPage(state, notifier),
+                               : state.hasNetworkError
+                                  ? NetworkErrorView(
+                                      onRetry: notifier.loadInitialData,
+                                    )
+                                  : _buildSelectedPage(state, notifier),
                         ),
                       ],
                     ),
@@ -2336,7 +2342,53 @@ class DashboardPage extends ConsumerWidget {
       },
     );
   }
+  Future<void> _onToggleStatus(
+    BuildContext context,
+    DashboardController notifier,
+    bool isOpen,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF111827),
+          title: Text(
+            isOpen ? 'Fermer le lieu ?' : 'Ouvrir le lieu ?',
+            style: const TextStyle(color: Colors.white),
+          ),
+          content: Text(
+            isOpen
+                ? 'La session active sera fermée immédiatement.'
+                : 'Une nouvelle session sera créée automatiquement.',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(isOpen ? 'Fermer' : 'Ouvrir'),
+            ),
+          ],
+        );
+      },
+    );
 
+    if (confirmed != true) return;
+
+    final ok = await notifier.togglePlaceStatus();
+
+    if (!context.mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Action impossible, veuillez réessayer.'),
+        ),
+      );
+    }
+  }
   // À ajouter à l'intérieur de ta classe DashboardPage
   // Widget _buildSelectedPage(int index) {
   //   switch (index) {

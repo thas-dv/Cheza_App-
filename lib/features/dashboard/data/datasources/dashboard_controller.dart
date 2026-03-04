@@ -41,9 +41,6 @@ class DashboardController extends StateNotifier<DashboardState> {
 
     try {
       final place = await ref.read(dashboardRepositoryProvider).fetchMyPlace();
-      final admin = await ref.read(dashboardRepositoryProvider).fetchMyAdmin();
-
-      ref.read(adminProvider.notifier).state = admin;
 
       /// image
       ref.read(placePhotoProvider.notifier).state = place.photoUrl;
@@ -54,11 +51,10 @@ class DashboardController extends StateNotifier<DashboardState> {
         placeAddress: place.address,
         placeImageUrl: place.photoUrl,
         placeDescription: place.typePlace,
-        adminName: admin.name,
         placeOpenedFromDb: place.isOpened,
         isOpen: place.isOpened,
       );
-
+      await _loadAdminSafely();
       await refreshActiveParty();
     } catch (_) {
       state = state.copyWith(hasNetworkError: true);
@@ -68,6 +64,15 @@ class DashboardController extends StateNotifier<DashboardState> {
   }
 
   // ================= ACTIVE PARTY =================
+  Future<void> _loadAdminSafely() async {
+    try {
+      final admin = await ref.read(dashboardRepositoryProvider).fetchMyAdmin();
+      ref.read(adminProvider.notifier).state = admin;
+      state = state.copyWith(adminName: admin.name);
+    } catch (_) {
+      // Ne jamais bloquer le chargement du lieu si admin indisponible.
+    }
+  }
 
   Future<void> refreshActiveParty() async {
     if (state.placeId == null) return;
@@ -82,7 +87,7 @@ class DashboardController extends StateNotifier<DashboardState> {
 
       ref.read(activePartyIdProvider.notifier).state = null;
       ref.read(dashboardStatsProvider.notifier).clear();
-
+      ref.read(clienteleProvider.notifier).clear();
       state = state.copyWith(
         isOpen: state.placeOpenedFromDb,
         activePartyId: null,

@@ -227,6 +227,23 @@ class TopBar extends StatelessWidget {
                   }),
                 ),
               ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isOpen
+                    ? Colors.green.withOpacity(0.15)
+                    : Colors.red.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                isOpen ? 'Ouvert' : 'Fermé',
+                style: TextStyle(
+                  color: isOpen ? Colors.greenAccent : Colors.redAccent,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
 
             /// Bouton ouvrir / fermer
             FilledButton.tonalIcon(

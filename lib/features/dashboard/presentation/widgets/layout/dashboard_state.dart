@@ -1,4 +1,5 @@
 class DashboardState {
+  static const Object _unset = Object();
   final bool isLoading;
   final bool hasNetworkError;
   final bool isOpen;
@@ -9,7 +10,7 @@ class DashboardState {
   final DateTime? openTime;
   final DateTime? closeTime;
   final int visitors;
-    final bool placeOpenedFromDb;
+  final bool placeOpenedFromDb;
   final int posts;
   final int selectedIndex;
   final bool isStatusUpdating;
@@ -47,16 +48,16 @@ class DashboardState {
     bool? isLoading,
     bool? hasNetworkError,
     bool? isOpen,
-    int? placeId,
+    Object? placeId = _unset,
     String? placeName,
-    int? activePartyId,
+    Object? activePartyId = _unset,
     String? partyName,
-    DateTime? openTime,
-    DateTime? closeTime,
-    String? placeImageUrl,
+    Object? openTime = _unset,
+    Object? closeTime = _unset,
+    Object? placeImageUrl = _unset,
     String? adminName,
-    String? placeDescription,
-    String? placeAddress,
+    Object? placeDescription = _unset,
+    Object? placeAddress = _unset,
     int? visitors,
     int? posts,
     int? notes,
@@ -68,17 +69,25 @@ class DashboardState {
       isLoading: isLoading ?? this.isLoading,
       hasNetworkError: hasNetworkError ?? this.hasNetworkError,
       isOpen: isOpen ?? this.isOpen,
-      placeId: placeId ?? this.placeId,
+      placeId: placeId == _unset ? this.placeId : placeId as int?,
       placeOpenedFromDb: placeOpenedFromDb ?? this.placeOpenedFromDb,
       placeName: placeName ?? this.placeName,
-      placeImageUrl: placeImageUrl ?? this.placeImageUrl,
+      placeImageUrl: placeImageUrl == _unset
+          ? this.placeImageUrl
+          : placeImageUrl as String?,
       adminName: adminName ?? this.adminName,
-      placeDescription: placeDescription ?? this.placeDescription,
-      placeAddress: placeAddress ?? this.placeAddress,
-      activePartyId: activePartyId ?? this.activePartyId,
+      placeDescription: placeDescription == _unset
+          ? this.placeDescription
+          : placeDescription as String?,
+      placeAddress: placeAddress == _unset
+          ? this.placeAddress
+          : placeAddress as String?,
+      activePartyId: activePartyId == _unset
+          ? this.activePartyId
+          : activePartyId as int?,
       partyName: partyName ?? this.partyName,
-      openTime: openTime ?? this.openTime,
-      closeTime: closeTime ?? this.closeTime,
+      openTime: openTime == _unset ? this.openTime : openTime as DateTime?,
+      closeTime: closeTime == _unset ? this.closeTime : closeTime as DateTime?,
       visitors: visitors ?? this.visitors,
       posts: posts ?? this.posts,
       notes: notes ?? this.notes,
