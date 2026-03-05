@@ -23,6 +23,8 @@ class ModernHomeWidget extends StatelessWidget {
           ),
           children: [
             HeroPlaceCard(
+              longitude: state.longitude,
+              latitude: state.latitude,
               placeName: state.placeName,
               imageUrl: state.placeImageUrl,
               isOpen: state.isOpen,
@@ -30,7 +32,6 @@ class ModernHomeWidget extends StatelessWidget {
               visitors: state.visitors,
               posts: state.posts,
               notes: state.notes,
-              engagement: state.engagement,
             ),
 
             SizedBox(height: isMobile ? 14 : 24),
@@ -78,6 +79,20 @@ class ModernHomeWidget extends StatelessWidget {
                             state.placeAddress!.isNotEmpty)
                         ? '📍 ${state.placeAddress}'
                         : '📍 Adresse non renseignée',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  Text(
+                    (state.placeAddress != null &&
+                            state.placeAddress!.isNotEmpty)
+                        ? 'latitude: ${state.latitude}'
+                        : ' non renseignée',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  Text(
+                    (state.placeAddress != null &&
+                            state.placeAddress!.isNotEmpty)
+                        ? 'longitude: ${state.longitude}'
+                        : '  non renseignée',
                     style: const TextStyle(color: Colors.white70),
                   ),
                 ],

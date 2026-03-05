@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class MenuTab extends StatefulWidget {
-  const MenuTab({super.key});
+  final int? placeId;
+  final String placeName;
+  const MenuTab({required this.placeId, required this.placeName, super.key});
 
   @override
   State<MenuTab> createState() => _MenuTabState();
@@ -280,91 +282,128 @@ class _MenuTabState extends State<MenuTab> {
   // =============================================================
   @override
   Widget build(BuildContext context) {
+    if (widget.placeId == null) {
+      return const Center(
+        child: Text('Lieu introuvable', style: TextStyle(color: Colors.grey)),
+      );
+    }
+
     if (loading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = width < 500
+
+    final crossAxisCount = width < 700
         ? 1
-        : width < 900
+        : width < 1100
         ? 2
         : 3;
 
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ================= HEADER =================
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Container(color: const Color(0xFF0B1120).withOpacity(0.85)),
+        ),
+
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Notre Menu",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              /// HEADER
+              Row(
+                children: [
+                  const Text(
+                    'Notre Menu',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  ElevatedButton.icon(
+                    onPressed: () => openMenuDialog(),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Créer un menu'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                widget.placeName,
+                style: const TextStyle(color: Colors.white70),
+              ),
+
+              const SizedBox(height: 16),
+
+              /// AUCUN MENU
+              if (menus.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.menu_book,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        const Text(
+                          'Aucun menu pour le moment',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        ElevatedButton(
+                          onPressed: () => openMenuDialog(),
+                          child: const Text('Créer le premier menu'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              /// LISTE MENUS
+              else
+                Expanded(
+                  child: GridView.builder(
+                    itemCount: menus.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 1,
+                    ),
+                    itemBuilder: (context, index) {
+                      final menu = menus[index];
+
+                      return _menuCard(
+                        menuId: menu['id'],
+                        menuName: menu['name'],
+                        createdAt: menu['created_at'].toString().substring(
+                          0,
+                          10,
+                        ),
+                        items: menu['menu_items'] ?? [],
+                        onEdit: () => openMenuDialog(menu: menu),
+                        onDelete: () => confirmDeleteMenu(menu['id']),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              ElevatedButton(
-                onPressed: () => openMenuDialog(),
-                child: const Text("Ajouter"),
-              ),
             ],
           ),
-
-          const SizedBox(height: 20),
-
-          // ================= EMPTY STATE =================
-          if (menus.isEmpty)
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.menu_book, size: 64, color: Colors.grey),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "Aucun menu pour le moment",
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () => openMenuDialog(),
-                      child: const Text("Créer le premier menu"),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            // ================= GRID =================
-            Expanded(
-              child: GridView.builder(
-                itemCount: menus.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1,
-                ),
-                itemBuilder: (context, index) {
-                  final menu = menus[index];
-                  return _menuCard(
-                    menuId: menu['id'],
-                    menuName: menu['name'],
-                    createdAt: menu['created_at'].toString().substring(0, 10),
-                    items: menu['menu_items'] ?? [],
-                    onEdit: () => openMenuDialog(menu: menu),
-                    onDelete: () => confirmDeleteMenu(menu['id']),
-                  );
-                },
-              ),
-            ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

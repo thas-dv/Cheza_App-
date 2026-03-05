@@ -108,12 +108,6 @@ class HomeSection extends StatelessWidget {
           value: 0,
           label: "Notes",
         ),
-        _StatCard(
-          icon: Icons.show_chart,
-          color: Colors.green,
-          value: 0,
-          label: "Engagement",
-        ),
       ],
     );
   }

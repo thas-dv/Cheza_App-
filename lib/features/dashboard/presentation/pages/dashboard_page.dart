@@ -2238,11 +2238,11 @@ class DashboardPage extends ConsumerWidget {
     WidgetRef ref,
     DashboardState state,
     bool isLarge,
-     DashboardController notifier,
+    DashboardController notifier,
   ) {
     return Sidebar(
       selectedIndex: state.selectedIndex,
-        onLogout: () => _logout(context, notifier, state),
+      onLogout: () => _logout(context, notifier, state),
       onSelect: (index) {
         if (!isLarge) {
           Navigator.of(context).pop();
@@ -2274,11 +2274,12 @@ class DashboardPage extends ConsumerWidget {
               key: _scaffoldKey,
               backgroundColor: AppColors.background,
               drawer: !isLarge
-                   ? _buildSidebar(context, ref, state, isLarge, notifier)
+                  ? _buildSidebar(context, ref, state, isLarge, notifier)
                   : null,
               body: Row(
                 children: [
-                    if (isLarge) _buildSidebar(context, ref, state, isLarge, notifier),
+                  if (isLarge)
+                    _buildSidebar(context, ref, state, isLarge, notifier),
                   Expanded(
                     child: Column(
                       children: [
@@ -2331,7 +2332,7 @@ class DashboardPage extends ConsumerWidget {
                         ),
                         BottomNavigationBarItem(
                           icon: Icon(Icons.group_outlined),
-                          label: 'Clientèle',
+                          label: 'Visiteurs',
                         ),
                         BottomNavigationBarItem(
                           icon: Icon(Icons.star_outline),
@@ -2349,14 +2350,12 @@ class DashboardPage extends ConsumerWidget {
       },
     );
   }
+
   Future<void> _logout(
     BuildContext context,
     DashboardController notifier,
     DashboardState state,
   ) async {
-    if (state.isOpen && state.activePartyId != null) {
-      await notifier.closeCurrentParty();
-    }
     await Supabase.instance.client.auth.signOut();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
@@ -2364,6 +2363,7 @@ class DashboardPage extends ConsumerWidget {
       (_) => false,
     );
   }
+
   Future<void> _onToggleStatus(
     BuildContext context,
     DashboardController notifier,
@@ -2400,15 +2400,9 @@ class DashboardPage extends ConsumerWidget {
 
     if (confirmed != true) return;
 
- bool ok;
+    bool ok;
     if (isOpen) {
       ok = await notifier.closeCurrentParty();
-      if (ok && context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginAdminPage()),
-          (_) => false,
-        );
-      }
     } else {
       final schedule = await _pickPartySchedule(context);
       if (schedule == null) return;
@@ -2447,11 +2441,14 @@ class DashboardPage extends ConsumerWidget {
 
     final openedAt = await pickDateTime(now);
     if (openedAt == null) return null;
-    final closedAt = await pickDateTime(openedAt.add(const Duration(hours: 12)));
+    final closedAt = await pickDateTime(
+      openedAt.add(const Duration(hours: 12)),
+    );
     if (closedAt == null || !closedAt.isAfter(openedAt)) return null;
 
     return (openedAt, closedAt);
   }
+
   // À ajouter à l'intérieur de ta classe DashboardPage
   // Widget _buildSelectedPage(int index) {
   //   switch (index) {
@@ -2489,7 +2486,7 @@ class DashboardPage extends ConsumerWidget {
           placeName: state.placeName,
         );
       case 6:
-        return const MenuTab();
+        return MenuTab(placeName: state.placeName, placeId: state.placeId);
       case 7:
         return const SettingsTab();
 

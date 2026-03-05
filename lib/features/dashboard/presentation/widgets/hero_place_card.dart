@@ -8,18 +8,20 @@ class HeroPlaceCard extends StatelessWidget {
   final int visitors;
   final int posts;
   final int notes;
-  final int engagement;
+  final int longitude;
+  final int latitude;
 
   const HeroPlaceCard({
     super.key,
     required this.placeName,
     this.imageUrl,
+    required this.latitude,
+    required this.longitude,
     required this.isOpen,
     required this.adminName,
     required this.visitors,
     required this.posts,
     required this.notes,
-    required this.engagement,
   });
 
   @override
@@ -106,7 +108,6 @@ class HeroPlaceCard extends StatelessWidget {
                     _StatBadge(label: 'Visiteurs', value: visitors.toString()),
                     _StatBadge(label: 'Posts', value: posts.toString()),
                     _StatBadge(label: 'Notes', value: notes.toString()),
-                    _StatBadge(label: 'Engagement', value: '$engagement%'),
                     _StatBadge(
                       label: 'Statut',
                       value: isOpen ? 'Ouvert' : 'Fermé',
