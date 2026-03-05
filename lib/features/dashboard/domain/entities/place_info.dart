@@ -5,6 +5,8 @@ class PlaceInfo {
     this.photoUrl,
     this.address,
     this.typePlace,
+     this.latitude,
+    this.longitude,
     required this.isOpened,
   });
   final bool isOpened;
@@ -13,4 +15,6 @@ class PlaceInfo {
   final String? photoUrl;
   final String? address;
   final String? typePlace;
+    final double? latitude;
+  final double? longitude;
 }

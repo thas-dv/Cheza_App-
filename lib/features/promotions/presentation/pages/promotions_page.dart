@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:cheza_app/features/menus/domain/entities/menu_entity.dart';
 import 'package:cheza_app/themes/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:cheza_app/widgets/inline_page_loader.dart';
 class PromotionsPage extends ConsumerWidget {
   const PromotionsPage({
     required this.placeId,
@@ -109,7 +109,7 @@ class PromotionsPage extends ConsumerWidget {
                     );
                   },
                   loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                      const InlinePageLoader(message: 'Chargement des promotions...'),
                   error: (error, _) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,

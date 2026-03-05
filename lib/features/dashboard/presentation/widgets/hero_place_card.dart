@@ -8,8 +8,8 @@ class HeroPlaceCard extends StatelessWidget {
   final int visitors;
   final int posts;
   final int notes;
-  final int longitude;
-  final int latitude;
+  final double? longitude;
+  final double? latitude;
 
   const HeroPlaceCard({
     super.key,

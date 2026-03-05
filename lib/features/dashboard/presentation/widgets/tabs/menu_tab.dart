@@ -2,7 +2,7 @@ import 'package:cheza_app/services/supabase_service_menu.dart';
 import 'package:cheza_app/themes/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:cheza_app/widgets/inline_page_loader.dart';
 class MenuTab extends StatefulWidget {
   final int? placeId;
   final String placeName;
@@ -289,7 +289,7 @@ class _MenuTabState extends State<MenuTab> {
       );
     }
     if (loading) {
-      return const Center(child: CircularProgressIndicator());
+  return const InlinePageLoader(message: 'Chargement du menu...');
     }
 
     final width = MediaQuery.of(context).size.width;

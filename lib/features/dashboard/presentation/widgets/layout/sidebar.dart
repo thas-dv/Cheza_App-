@@ -26,12 +26,13 @@ class Sidebar extends ConsumerWidget {
         color: Color(0xFF111827),
         border: Border(right: BorderSide(color: Color(0xFF1E293B))),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SizedBox(height: 10,),
           CircleAvatar(
-            radius: 28,
+            radius: 30,
             backgroundColor: Colors.grey.shade800,
             backgroundImage:
                 admin?.photoUrl != null && admin!.photoUrl!.isNotEmpty

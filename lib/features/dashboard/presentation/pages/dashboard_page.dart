@@ -2215,6 +2215,7 @@ import 'package:cheza_app/features/dashboard/presentation/widgets/layout/topbar.
 import 'package:cheza_app/themes/app_colors.dart';
 import 'package:cheza_app/widgets/network_aware_wrapper.dart';
 import 'package:flutter/material.dart';
+import 'package:cheza_app/widgets/inline_page_loader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/clientele_tab.dart';
 import 'package:cheza_app/features/dashboard/presentation/widgets/tabs/note_tab.dart';
@@ -2305,7 +2306,7 @@ class DashboardPage extends ConsumerWidget {
 
                         Expanded(
                           child: state.isLoading
-                              ? const Center(child: CircularProgressIndicator())
+                               ? const InlinePageLoader(message: 'Synchronisation du dashboard...')
                               : state.hasNetworkError
                               ? NetworkErrorView(
                                   onRetry: notifier.loadInitialData,

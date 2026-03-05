@@ -4,8 +4,8 @@ class DashboardState {
   final bool hasNetworkError;
   final bool isOpen;
   final int? placeId;
-  final int longitude;
-  final int latitude;
+  final double? longitude;
+  final double? latitude;
   final String placeName;
   final int? activePartyId;
   final String partyName;
@@ -23,8 +23,8 @@ class DashboardState {
   final int notes;
 
   const DashboardState({
-    this.latitude = 0,
-    this.longitude = 0,
+    this.latitude,
+    this.longitude,
     this.placeOpenedFromDb = false,
     this.isLoading = true,
     this.hasNetworkError = false,
@@ -65,7 +65,8 @@ class DashboardState {
     int? visitors,
     int? posts,
     int? notes,
-    int? engagement,
+    double? longitude,
+    double? latitude,
     int? selectedIndex,
     bool? isStatusUpdating,
   }) {
@@ -95,9 +96,13 @@ class DashboardState {
       visitors: visitors ?? this.visitors,
       posts: posts ?? this.posts,
       notes: notes ?? this.notes,
-      longitude: longitude,
-      latitude: latitude,
+      longitude: longitude == _unset
+          ? this.longitude
+          : (longitude as num?)?.toDouble(),
 
+      latitude: latitude == _unset
+          ? this.latitude
+          : (latitude as num?)?.toDouble(),
       selectedIndex: selectedIndex ?? this.selectedIndex,
       isStatusUpdating: isStatusUpdating ?? this.isStatusUpdating,
     );

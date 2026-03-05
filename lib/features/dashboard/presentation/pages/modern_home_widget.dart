@@ -82,17 +82,15 @@ class ModernHomeWidget extends StatelessWidget {
                     style: const TextStyle(color: Colors.white70),
                   ),
                   Text(
-                    (state.placeAddress != null &&
-                            state.placeAddress!.isNotEmpty)
-                        ? 'latitude: ${state.latitude}'
-                        : ' non renseignée',
+                    state.latitude != null
+                        ? 'Latitude: ${state.latitude!.toStringAsFixed(6)}'
+                        : 'Latitude: non renseignée',
                     style: const TextStyle(color: Colors.white70),
                   ),
                   Text(
-                    (state.placeAddress != null &&
-                            state.placeAddress!.isNotEmpty)
-                        ? 'longitude: ${state.longitude}'
-                        : '  non renseignée',
+                    state.longitude != null
+                        ? 'Longitude: ${state.longitude!.toStringAsFixed(6)}'
+                        : 'Longitude: non renseignée',
                     style: const TextStyle(color: Colors.white70),
                   ),
                 ],

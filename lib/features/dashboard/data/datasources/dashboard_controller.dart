@@ -55,6 +55,8 @@ class DashboardController extends StateNotifier<DashboardState> {
         placeDescription: place.typePlace,
         placeOpenedFromDb: place.isOpened,
         isOpen: place.isOpened,
+        latitude: place.latitude,
+        longitude: place.longitude,
       );
 
       await _loadAdminSafely();
@@ -109,7 +111,7 @@ class DashboardController extends StateNotifier<DashboardState> {
         visitors: 0,
         posts: 0,
         notes: 0,
-        engagement: 0,
+      
       );
 
       return;
@@ -227,7 +229,7 @@ class DashboardController extends StateNotifier<DashboardState> {
       visitors: stats.visitors,
       posts: stats.posts,
       notes: stats.notes,
-      engagement: stats.engagement,
+     
     );
   }
 
@@ -254,7 +256,7 @@ class DashboardController extends StateNotifier<DashboardState> {
           visitors: stats.visitors,
           posts: stats.posts,
           notes: stats.notes,
-          engagement: stats.engagement,
+        
         );
       },
     );
