@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cheza_app/features/dashboard/data/datasources/dashboard_controller.dart';
+
 import 'package:cheza_app/features/auth/presentation/providers/admin_provider.dart';
 
 class Sidebar extends ConsumerWidget {
@@ -18,7 +18,6 @@ class Sidebar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final admin = ref.watch(adminProvider);
-    final dashboardState = ref.watch(dashboardControllerProvider);
 
     return Container(
       width: 270,
@@ -26,43 +25,45 @@ class Sidebar extends ConsumerWidget {
         color: Color(0xFF111827),
         border: Border(right: BorderSide(color: Color(0xFF1E293B))),
       ),
-           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 10,),
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: Colors.grey.shade800,
-            backgroundImage:
-                admin?.photoUrl != null && admin!.photoUrl!.isNotEmpty
+          SizedBox(height: 20),
+          const SizedBox(height: 10),
+
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.grey.shade800,
+                backgroundImage:
+                    admin?.photoUrl != null && admin!.photoUrl!.isNotEmpty
                     ? NetworkImage(admin.photoUrl!)
                     : null,
-            child: admin?.photoUrl == null || admin!.photoUrl!.isEmpty
-                ? const Icon(Icons.person, color: Colors.white)
-                : null,
+                child: admin?.photoUrl == null || admin!.photoUrl!.isEmpty
+                    ? const Icon(Icons.person, color: Colors.white)
+                    : null,
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Text(
+                  admin?.name ?? 'Admin',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 10),
 
-          Text(
-            admin?.name ?? 'Admin',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          Text(
-            dashboardState.placeAddress?.trim().isNotEmpty == true
-                ? dashboardState.placeAddress!
-                : 'Adresse non renseignée',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-          ),
+          Divider(endIndent: 3, height: 1, color: Colors.white),
 
           const SizedBox(height: 30),
 

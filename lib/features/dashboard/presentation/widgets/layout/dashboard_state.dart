@@ -65,8 +65,8 @@ class DashboardState {
     int? visitors,
     int? posts,
     int? notes,
-    double? longitude,
-    double? latitude,
+    Object? longitude = _unset,
+    Object? latitude = _unset,
     int? selectedIndex,
     bool? isStatusUpdating,
   }) {

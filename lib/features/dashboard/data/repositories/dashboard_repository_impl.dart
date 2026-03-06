@@ -32,15 +32,17 @@ class DashboardRepositoryImpl implements DashboardRepository {
       photoUrl: place['photo_url'] as String?,
       address: place['address'] as String?,
       typePlace: place['type_place'] as String?,
-       latitude: _asDouble(place['latitude']),
+      latitude: _asDouble(place['latitude']),
       longitude: _asDouble(place['longitude']),
     );
   }
+
   double? _asDouble(dynamic value) {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value);
     return null;
   }
+
   bool _asBool(dynamic value) {
     if (value is bool) return value;
     if (value is num) return value != 0;
@@ -115,10 +117,10 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
 
     return AdminEntity(
-      id: profile['id'] as int,
+      id: (profile['id'] ?? '').toString(),
 
       name: (profile['fullname'] ?? profile['username'] ?? "Admin") as String,
-      photoUrl: profile['photo_url'] as String?,
+      photoUrl: profile['image_url'] as String?,
     );
   }
 
