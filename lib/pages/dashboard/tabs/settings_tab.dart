@@ -1136,7 +1136,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                if (admin!['type_admin'] == 'Owner')
+                if (admin!['type_admin'] == 'owner')
                   _secondaryButton(
                     icon: Icons.person_add,
                     label: "Ajouter un administrateur",

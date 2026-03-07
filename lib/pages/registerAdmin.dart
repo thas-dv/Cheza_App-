@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:cheza_app/pages/login.dart';
 import 'package:cheza_app/services/supabase_service_admin.dart';
 import 'package:cheza_app/widgets/network_aware_wrapper.dart';
-import 'package:cheza_app/widgets/temp_reigtore_place.dart';
+// import 'package:cheza_app/widgets/temp_reigtore_place.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,6 +32,7 @@ class _RegisterAdminPageState extends State<RegisterAdminPage> {
   XFile? adminImage;
 
   bool isLoading = false;
+
 
   Future<void> pickImage() async {
     final picker = ImagePicker();
@@ -384,7 +385,7 @@ class _RegisterAdminPageState extends State<RegisterAdminPage> {
                       SnackBar(content: Text("Mot passe incorrect")),
                     );
                   } else {
-                    await SupabaseServiceAdmin.registerOwnerWithPlace(
+                   await SupabaseServiceAdmin.registerOwner(
                       email: emailCtrl.text,
                       password: passCtrl.text,
                       fullname: fullnameCtrl.text,
@@ -393,17 +394,12 @@ class _RegisterAdminPageState extends State<RegisterAdminPage> {
                       gender: selectedGender!,
                       birthDate: birthCtrl.text,
                       adminCountry: selectedCountry!,
-                      placeName: TempRegisterStore.placeName!,
-                      placeAddress: TempRegisterStore.placeAddress!,
-                      placeType: TempRegisterStore.placeType!,
-                      placeCountry: TempRegisterStore.placeCountry!,
-                      latitude: TempRegisterStore.latitude,
-                      longitude: TempRegisterStore.longitude,
+                     
                       adminImage: adminImage,
-                      placeImage: TempRegisterStore.placeImage,
+                      
                     );
 
-                    TempRegisterStore.clear();
+                  
 
                     Navigator.pushReplacement(
                       context,

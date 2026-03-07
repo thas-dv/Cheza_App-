@@ -6,6 +6,7 @@ import 'package:cheza_app/features/menus/domain/entities/menu_entity.dart';
 import 'package:cheza_app/themes/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cheza_app/widgets/inline_page_loader.dart';
+import 'package:cheza_app/features/promotions/data/datasources/promotions_supabase_data_source.dart';
 class PromotionsPage extends ConsumerWidget {
   const PromotionsPage({
     required this.placeId,
@@ -104,6 +105,7 @@ class PromotionsPage extends ConsumerWidget {
                               _confirmDeletePromo(context, ref, promo),
                           onAssing: () =>
                               _linkPromoToActiveParty(context, ref, promo.id),
+                          onWinners: () => _openWinnersDialog(context, ref, promo.id),
                         );
                       },
                     );
@@ -141,7 +143,125 @@ class PromotionsPage extends ConsumerWidget {
       ],
     );
   }
+//////////////////////////////////
+  Future<void> _openWinnersDialog(
+    BuildContext context,
+    WidgetRef ref,
+    int promoId,
+  ) async {
+    final dataSource = PromotionsSupabaseDataSource();
 
+    Future<List<Map<String, dynamic>>> loadWinners() {
+      return dataSource.loadPromoWinners(promoId: promoId);
+    }
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            bool loadingAdd = false;
+
+            Future<void> addWinner() async {
+              if (activePartyId == null) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  const SnackBar(content: Text('Aucune fête active.')),
+                );
+                return;
+              }
+
+              final attendees = await dataSource.loadPresentAttendees(
+                partyId: activePartyId!,
+              );
+
+              if (!dialogContext.mounted) return;
+              final selectedId = await showDialog<int>(
+                context: dialogContext,
+                builder: (popupContext) => SimpleDialog(
+                  title: const Text('Ajouter un gagnant (présent)'),
+                  children: attendees.map((att) {
+                    final profile = Map<String, dynamic>.from(att['profiles'] ?? const {});
+                    return SimpleDialogOption(
+                      onPressed: () => Navigator.pop(popupContext, att['id'] as int),
+                      child: Text(profile['username']?.toString() ?? 'Visiteur'),
+                    );
+                  }).toList(),
+                ),
+              );
+
+              if (selectedId == null) return;
+              setStateDialog(() => loadingAdd = true);
+              try {
+                await dataSource.addPromoWinner(promoId: promoId, attendeeId: selectedId);
+                ref.read(promotionsRefreshTickProvider.notifier).state++;
+              } finally {
+                if (dialogContext.mounted) {
+                  setStateDialog(() => loadingAdd = false);
+                }
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Vainqueurs'),
+              content: SizedBox(
+                width: 420,
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: loadWinners(),
+                  builder: (context, snap) {
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()));
+                    }
+                    final winners = snap.data ?? [];
+                    if (winners.isEmpty) {
+                      return const Text('Aucun vainqueur enregistré.');
+                    }
+                    return SizedBox(
+                      height: 240,
+                      child: ListView.builder(
+                        itemCount: winners.length,
+                        itemBuilder: (_, i) {
+                          final attendee = Map<String, dynamic>.from(winners[i]['attendee'] ?? const {});
+                          final profile = Map<String, dynamic>.from(attendee['profiles'] ?? const {});
+                          return ListTile(
+                            leading: const Icon(Icons.emoji_events, color: Colors.amber),
+                            title: Text(profile['username']?.toString() ?? 'Visiteur'),
+                            subtitle: Text('Présent: ${attendee['is_present'] == true ? 'Oui' : 'Non'}'),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Fermer'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: loadingAdd ? null : () async {
+                    await addWinner();
+                    if (dialogContext.mounted) {
+                      setStateDialog(() {});
+                    }
+                  },
+                  icon: loadingAdd
+                      ? const SizedBox(
+                          height: 14,
+                          width: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.add),
+                  label: const Text('Ajouter gagnant'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+/////////////////////////////////////////////////
   Future<void> _linkPromoToActiveParty(
     BuildContext context,
     WidgetRef ref,
@@ -1090,12 +1210,14 @@ class _PromotionCard extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onAssing,
+     required this.onWinners,
   });
 
   final PromotionEntity promotion;
   final VoidCallback onAddItem;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onWinners;
   final VoidCallback onAssing;
   String _formatGNF(double value) {
     final formatter = NumberFormat('#,###', 'fr_FR');
@@ -1252,7 +1374,7 @@ class _PromotionCard extends StatelessWidget {
                 label: const Text('Lier à la fête'),
               ),
               TextButton.icon(
-                onPressed: () {},
+                  onPressed: onWinners,
                 icon: const Icon(Icons.emoji_events, size: 18),
                 label: const Text('Vainqueurs'),
               ),

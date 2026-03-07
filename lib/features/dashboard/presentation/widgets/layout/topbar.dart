@@ -152,7 +152,7 @@ class TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const tabs = ['Dashboard', 'Clientèle', 'Notes', 'Posts'];
+    const tabs = ['Dashboard', 'Visiteurs', 'Notes', 'Posts'];
     final horizontalPadding = isLargeScreen ? 24.0 : 12.0;
 
     return SafeArea(

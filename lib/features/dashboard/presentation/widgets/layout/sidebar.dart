@@ -29,8 +29,7 @@ class Sidebar extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 20),
-          const SizedBox(height: 10),
+          SizedBox(height: 30),
 
           Row(
             children: [
@@ -67,13 +66,12 @@ class Sidebar extends ConsumerWidget {
 
           const SizedBox(height: 30),
 
-          _item('Dashboard', Icons.dashboard_outlined, 0),
-          _item('Clientèle', Icons.group_outlined, 1),
-          _item('Notes', Icons.star_outline, 2),
-          _item('Posts', Icons.photo_outlined, 3),
           _item('Historique', Icons.history, 4),
-          _item('Promotions', Icons.local_offer_outlined, 5),
+          _item('Promotion', Icons.local_activity_outlined, 5),
+          _item('Evenement', Icons.event_available_outlined, 8),
           _item('Menu', Icons.restaurant_menu_outlined, 6),
+          _item('Stafs', Icons.wallet_membership, 11),
+          _item('Commandes', Icons.confirmation_num, 12),
 
           const Spacer(),
 

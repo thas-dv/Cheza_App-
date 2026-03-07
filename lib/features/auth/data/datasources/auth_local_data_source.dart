@@ -43,13 +43,15 @@ class AuthLocalDataSource {
     final userId = getCurrentUserId();
     if (userId == null) return false;
     try {
-      final admin = await _client
-          .from('admins')
+      final link = await _client
+          .from('admins_place')
           .select('place_id')
-          .eq('id', userId)
+          .eq('admin_id', userId)
+          .eq('active', true)
+          .limit(1)
           .maybeSingle();
 
-      final placeId = admin?['place_id'] as int?;
+      final placeId = link?['place_id'] as int?;
       if (placeId == null) return false;
 
       final place = await _client

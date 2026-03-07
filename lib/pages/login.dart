@@ -4,12 +4,13 @@ import 'dart:ui';
 
 import 'package:cheza_app/core/storage/local_party_storage.dart';
 import 'package:cheza_app/pages/dashboard/dashboard_page.dart';
-import 'package:cheza_app/pages/register_place.dart';
+// import 'package:cheza_app/pages/register_place.dart';
 import 'package:cheza_app/services/supabase_network_service.dart';
 import 'package:cheza_app/services/supabase_service_admin.dart';
 import 'package:cheza_app/themes/app_colors.dart';
 import 'package:cheza_app/widgets/network_aware_wrapper.dart';
 import 'package:flutter/material.dart';
+import 'package:cheza_app/pages/registerAdmin.dart';
 // import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginAdminPage extends StatefulWidget {
@@ -74,254 +75,8 @@ class _LoginAdminPageState extends State<LoginAdminPage>
     super.dispose();
   }
 
-  @override
-  // Widget build(BuildContext context) {
-  //   return NetworkToastWrapper(
-  //     child: Scaffold(
-  //       backgroundColor: const Color(0xFF121212),
-  //       body: Center(
-  //         child: SingleChildScrollView(
-  //           padding: const EdgeInsets.all(20),
-  //           child: ConstrainedBox(
-  //             constraints: const BoxConstraints(maxWidth: 420),
-  //             child: Column(
-  //               mainAxisAlignment: MainAxisAlignment.center,
-  //               children: [
-  //                 // ---------- Logo / Icone ----------
-  //                 CircleAvatar(
-  //                   radius: 45,
-  //                   backgroundColor: const Color(0xFF5A2D82).withOpacity(0.3),
-  //                   child: const Icon(
-  //                     Icons.admin_panel_settings,
-  //                     color: Color(0xFFB388FF),
-  //                     size: 50,
-  //                   ),
-  //                 ),
-  //                 const SizedBox(height: 20),
-  //                 // ---------- Titre ----------
-  //                 const Text(
-  //                   "Connexion Administrateur",
-  //                   style: TextStyle(
-  //                     fontSize: 22,
-  //                     fontWeight: FontWeight.bold,
-  //                     color: Colors.white,
-  //                   ),
-  //                 ),
-  //                 const SizedBox(height: 25),
-  //                 // ---------- Card ----------
-  //                 Card(
-  //                   color: const Color(0xFF1E1E1E),
-  //                   shape: RoundedRectangleBorder(
-  //                     borderRadius: BorderRadius.circular(18),
-  //                   ),
-  //                   elevation: 6,
-  //                   shadowColor: Colors.black54,
-  //                   child: Padding(
-  //                     padding: const EdgeInsets.all(18),
-  //                     child: Form(
-  //                       key: _formKey,
-  //                       child: Column(
-  //                         children: [
-  //                           // Email
-  //                           TextFormField(
-  //                             controller: emailCtrl,
-  //                             keyboardType: TextInputType.emailAddress,
-  //                             decoration: _input("Email"),
-  //                             validator: (v) {
-  //                               if (v == null || v.isEmpty) {
-  //                                 return "Email obligatoire";
-  //                               }
-  //                               if (!v.contains("@") || !v.contains(".")) {
-  //                                 return "Email invalide";
-  //                               }
-  //                               return null;
-  //                             },
-  //                           ),
-  //                           const SizedBox(height: 15),
-  //                           // Mot de passe
-  //                           TextFormField(
-  //                             controller: passCtrl,
-  //                             obscureText: !isPasswordVisible,
-  //                             decoration: _input("Mot de passe").copyWith(
-  //                               suffixIcon: IconButton(
-  //                                 icon: Icon(
-  //                                   isPasswordVisible
-  //                                       ? Icons.visibility
-  //                                       : Icons.visibility_off,
-  //                                   color: Colors.white70,
-  //                                 ),
-  //                                 onPressed: () {
-  //                                   setState(() {
-  //                                     isPasswordVisible = !isPasswordVisible;
-  //                                   });
-  //                                 },
-  //                               ),
-  //                             ),
-  //                             validator: (v) => v == null || v.isEmpty
-  //                                 ? "Mot de passe requis"
-  //                                 : null,
-  //                           ),
-  //                           const SizedBox(height: 10),
-  //                           // Mot de passe oublié
-  //                           Align(
-  //                             alignment: Alignment.centerRight,
-  //                             child: TextButton(
-  //                               onPressed: () {},
-  //                               child: const Text(
-  //                                 "Mot de passe oublié ?",
-  //                                 style: TextStyle(color: Color(0xFFB388FF)),
-  //                               ),
-  //                             ),
-  //                           ),
-  //                           const SizedBox(height: 20),
-  //                           // Bouton login
-  //                           SizedBox(
-  //                             width: double.infinity,
-  //                             child: ElevatedButton(
-  //                               onPressed: (isLoading || !hasConnection)
-  //                                   ? null
-  //                                   : () async {
-  //                                       if (!_formKey.currentState!.validate())
-  //                                         return;
-  //                                       // ⛔ BLOQUAGE ABSOLU SANS INTERNET
-  //                                       if (!hasConnection) {
-  //                                         ScaffoldMessenger.of(
-  //                                           context,
-  //                                         ).showSnackBar(
-  //                                           const SnackBar(
-  //                                             content: Text(
-  //                                               "Aucune connexion Internet",
-  //                                             ),
-  //                                           ),
-  //                                         );
-  //                                         return;
-  //                                       }
-  //                                       setState(() => isLoading = true);
-  //                                       try {
-  //                                         final email = emailCtrl.text
-  //                                             .trim()
-  //                                             .toLowerCase();
-  //                                         final password = passCtrl.text.trim();
-  //                                         // 🔐 AUTH
-  //                                         final authRes = await supabase.auth
-  //                                             .signInWithPassword(
-  //                                               email: email,
-  //                                               password: password,
-  //                                             );
-  //                                         final user = authRes.user;
-  //                                         if (user == null) {
-  //                                           throw Exception(
-  //                                             "Connexion échouée",
-  //                                           );
-  //                                         }
-  //                                         // 🛡️ CHECK ADMIN
-  //                                         final admin = await supabase
-  //                                             .from('admins')
-  //                                             .select(
-  //                                               'id, place_id, type_admin, is_active',
-  //                                             )
-  //                                             .eq('id', user.id)
-  //                                             .eq('is_active', true)
-  //                                             .maybeSingle();
-  //                                         if (admin == null) {
-  //                                           throw Exception("Accès refusé");
-  //                                         }
-  //                                         // ✅ OK → DASHBOARD
-  //                                         Navigator.pushReplacement(
-  //                                           context,
-  //                                           MaterialPageRoute(
-  //                                             builder: (_) =>
-  //                                                 const DashboardPage(),
-  //                                           ),
-  //                                         );
-  //                                       } catch (e) {
-  //                                         ScaffoldMessenger.of(
-  //                                           context,
-  //                                         ).showSnackBar(
-  //                                           SnackBar(
-  //                                             content: Text(
-  //                                               hasConnection
-  //                                                   ? "Email ou mot de passe incorrect"
-  //                                                   : "Connexion Internet requise",
-  //                                             ),
-  //                                           ),
-  //                                         );
-  //                                       } finally {
-  //                                         if (mounted)
-  //                                           setState(() => isLoading = false);
-  //                                       }
-  //                                     },
-  //                               child: isLoading
-  //                                   ? const CircularProgressIndicator(
-  //                                       color: Colors.white,
-  //                                     )
-  //                                   : Text(
-  //                                       hasConnection
-  //                                           ? "Connexion"
-  //                                           : "Connexion indisponible",
-  //                                       style: const TextStyle(
-  //                                         fontSize: 16,
-  //                                         color: Colors.white,
-  //                                       ),
-  //                                     ),
-  //                             ),
-  //                           ),
-  //                           //Bouton Enregister un lieu
-  //                           const SizedBox(height: 15),
-  //                           Row(
-  //                             mainAxisAlignment: MainAxisAlignment.center,
-  //                             children: [
-  //                               const Text(
-  //                                 "Pas de compte ?",
-  //                                 style: TextStyle(color: Colors.white70),
-  //                               ),
-  //                               TextButton(
-  //                                 onPressed: () {
-  //                                   Navigator.push(
-  //                                     context,
-  //                                     MaterialPageRoute(
-  //                                       builder: (_) =>
-  //                                           const RegisterPlacePage(),
-  //                                     ),
-  //                                   );
-  //                                 },
-  //                                 child: const Text(
-  //                                   "Créer un compte",
-  //                                   style: TextStyle(
-  //                                     color: Color(0xFFB388FF),
-  //                                     fontWeight: FontWeight.bold,
-  //                                   ),
-  //                                 ),
-  //                               ),
-  //                             ],
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 const SizedBox(height: 40),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-  // @override
-  // Widget build(BuildContext context) {
-  //   final size = MediaQuery.of(context).size;
-  //   final isDesktop = size.width > 900 && size.height > 600;
-  //   return NetworkToastWrapper(
-  //     child: Scaffold(
-  //       backgroundColor: AppColors.backgroundDark,
-  //       body: isDesktop
-  //           ? Center(child: _buildDesktopLayout())
-  //           : _buildMobileLayout(),
-  //     ),
-  //   );
-  // }
+ 
+ 
   @override
   Widget build(BuildContext context) {
     return NetworkToastWrapper(
@@ -666,18 +421,26 @@ class _LoginAdminPageState extends State<LoginAdminPage>
                                     final admin = await supabase
                                         .from('admins')
                                         .select(
-                                          'id, place_id, type_admin, is_active',
+                                          'id, type_admin, is_active',
                                         )
                                         .eq('id', user.id)
                                         .eq('is_active', true)
                                         .maybeSingle();
 
                                     if (admin == null) throw Exception();
-                                                                        await LocalPartyStorage.clearSession();
+                                     final link = await supabase
+                                        .from('admins_place')
+                                        .select('place_id')
+                                        .eq('admin_id', user.id)
+                                        .eq('active', true)
+                                        .limit(1)
+                                        .maybeSingle();
+
+                                    await LocalPartyStorage.clearSession();
                                     await LocalPartyStorage.setPartySession(
                                       isOpen: false,
                                       userId: user.id,
-                                      placeId: admin['place_id'] as int,
+                                      placeId: (link?['place_id'] as int?) ?? 0,
                                     );
 
                                     // 🔥 TRANSITION SMOOTH VERS DASHBOARD
@@ -750,7 +513,7 @@ class _LoginAdminPageState extends State<LoginAdminPage>
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const RegisterPlacePage(),
+                                builder: (_) => const RegisterAdminPage(),
                               ),
                             );
                           },

@@ -30,7 +30,7 @@ class _RegisterPlacePageState extends State<RegisterPlacePage> {
   String? selectedCountryName;
 
   bool isLoading = false;
-
+  bool generatingLocation = false;
   final placeTypes = [
     "Bar",
     "Club",
@@ -205,19 +205,56 @@ class _RegisterPlacePageState extends State<RegisterPlacePage> {
   }
 
   Future<void> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+    try {
+      setState(() {
+        generatingLocation = true;
+      });
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+      if (!serviceEnabled) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Le GPS est désactivé. Activez le GPS pour générer vos coordonnées.",
+            ),
+          ),
+        );
+
+        setState(() {
+          generatingLocation = false;
+        });
+
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            generatingLocation = false;
+          });
+          return;
+        }
+      }
+
+      Position position = await Geolocator.getCurrentPosition();
+
+      latitudeCtrl.text = position.latitude.toString();
+      longitudeCtrl.text = position.longitude.toString();
+    } catch (e) {
+      debugPrint("Erreur GPS: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          generatingLocation = false;
+        });
+      }
     }
-
-    Position position = await Geolocator.getCurrentPosition();
-
-    latitudeCtrl.text = position.latitude.toString();
-    longitudeCtrl.text = position.longitude.toString();
   }
 
   Widget _leftForm({bool isMobile = false}) {
@@ -298,7 +335,34 @@ class _RegisterPlacePageState extends State<RegisterPlacePage> {
               ),
 
             const SizedBox(height: 15),
-
+            const Text(
+              "Générez vos coordonnées automatiquement.\n"
+              "Si le GPS n'est pas activé, veuillez l'activer pour obtenir votre position.",
+              style: TextStyle(color: Colors.white60, fontSize: 13),
+            ),
+            const SizedBox(height: 10),
+            if (generatingLocation)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      "Génération des coordonnées GPS...",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 10),
             // 🔥 GPS + PHOTO ALIGNÉS EN MOBILE
             if (isDesktop)
               _gpsButton()

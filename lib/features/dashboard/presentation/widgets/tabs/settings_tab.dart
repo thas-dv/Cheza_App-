@@ -23,13 +23,12 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   Map<String, dynamic>? admin;
   Map<String, dynamic>? place;
   List<Map<String, dynamic>> admins = [];
+  List<Map<String, dynamic>> placeMedias = [];
   final placeTypes = [
     "Bar",
     "Club",
     "Lounge",
     "Restaurant",
-    "Lounge/Club",
-    "Lounge/Restaurant",
   ];
   String? selectedType;
   // AJOUT (preview images)
@@ -60,6 +59,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       admins = await SupabaseServiceAdmin.fetchAdminsForMyPlace(
         admin!['place_id'],
       );
+      placeMedias = await SupabaseServicePlaces.fetchPlaceMedia(admin!['place_id']);
     } catch (e) {
       debugPrint("❌ SETTINGS LOAD ERROR: $e");
     } finally {
@@ -170,7 +170,34 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       },
     );
   }
+/////////////////////////////////
+  Future<void> _pickAndUploadPlaceMedia(bool isPhoto) async {
+    if (place == null || place!['id'] == null) return;
+    final picker = ImagePicker();
+    final picked = isPhoto
+        ? await picker.pickImage(source: ImageSource.gallery)
+        : await picker.pickVideo(source: ImageSource.gallery);
+    if (!mounted || picked == null) return;
 
+    final ok = await SupabaseServicePlaces.addPlaceMedia(
+      placeId: place!['id'] as int,
+      file: picked,
+      isPhoto: isPhoto,
+    );
+
+    if (!mounted) return;
+    if (ok) {
+      final medias = await SupabaseServicePlaces.fetchPlaceMedia(place!['id'] as int);
+      setState(() => placeMedias = medias);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isPhoto ? 'Image ajoutée.' : 'Vidéo ajoutée.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Échec de l'upload média.")),
+      );
+    }
+  }
   // ================= PICK IMAGE PLACE =================
   Future<void> _pickPlaceImage() async {
     if (place == null || place!['id'] == null) return;
@@ -1127,7 +1154,60 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           ),
 
           const SizedBox(height: 30),
-
+//////////////////////////////////////
+          _sectionTitle("Médias du lieu"),
+          _card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _secondaryButton(
+                      icon: Icons.photo,
+                      label: "Ajouter image",
+                      onPressed: () => _pickAndUploadPlaceMedia(true),
+                    ),
+                    const SizedBox(width: 8),
+                    _secondaryButton(
+                      icon: Icons.video_library,
+                      label: "Ajouter vidéo",
+                      onPressed: () => _pickAndUploadPlaceMedia(false),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (placeMedias.isEmpty)
+                  const Text('Aucun média pour ce lieu.', style: TextStyle(color: Colors.white70))
+                else
+                  SizedBox(
+                    height: 96,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: placeMedias.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, i) {
+                        final media = placeMedias[i];
+                        final isPhoto = media['is_photo'] == true;
+                        final url = media['media_url']?.toString() ?? '';
+                        return Container(
+                          width: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.white10,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: isPhoto && url.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(url, fit: BoxFit.cover),
+                                )
+                              : const Center(child: Icon(Icons.play_circle_outline, color: Colors.white70)),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
           // ================= ADMINS =================
           _sectionTitle("Administrateurs"),
           _card(
@@ -1142,7 +1222,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                if (admin!['type_admin'] == 'Owner')
+                if (admin!['type_admin'] == 'owner')
                   _secondaryButton(
                     icon: Icons.person_add,
                     label: "Ajouter un administrateur",

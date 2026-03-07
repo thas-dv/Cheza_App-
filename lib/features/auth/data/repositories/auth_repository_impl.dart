@@ -18,21 +18,7 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       if (_localDataSource.hasActiveSession()) {
-        final canOpenDashboard = await _localDataSource
-            .hasActiveOpenedPlaceForCurrentUser()
-            .timeout(const Duration(seconds: 4), onTimeout: () => false);
-
-        if (canOpenDashboard) {
-          return StartupDestination.dashboard;
-        }
-
-        final hasOfflineAccess = await _localDataSource
-            .hasOpenPartyOfflineAccessForCurrentUser()
-            .timeout(const Duration(seconds: 2), onTimeout: () => false);
-
-        if (hasOfflineAccess) {
-          return StartupDestination.dashboard;
-        }
+        return StartupDestination.dashboard;
       }
     } catch (_) {
       return StartupDestination.login;

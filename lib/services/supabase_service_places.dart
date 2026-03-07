@@ -1,6 +1,7 @@
 import 'package:cheza_app/services/supabase_service_parties.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:cheza_app/services/supabase_service_storage.dart';
+import 'package:image_picker/image_picker.dart';
 final supabase = Supabase.instance.client;
 
 class SupabaseServicePlaces {
@@ -10,9 +11,11 @@ class SupabaseServicePlaces {
     if (user == null) return null;
 
     final res = await Supabase.instance.client
-        .from('admins')
+        .from('admins_place')
         .select('place_id')
-        .eq('id', user.id)
+        .eq('admin_id', user.id)
+        .eq('active', true)
+        .limit(1)
         .maybeSingle();
 
     return res?['place_id'] as int?;
@@ -50,6 +53,49 @@ class SupabaseServicePlaces {
         .count(CountOption.exact);
 
     return res.count;
+  }
+///////////////////////
+  static Future<bool> addPlaceMedia({
+    required int placeId,
+    required XFile file,
+    required bool isPhoto,
+  }) async {
+    try {
+      final extension = file.path.split('.').last.toLowerCase();
+      final path = 'place_${placeId}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final url = await SupabaseServiceStorage.uploadFile(
+        file: file,
+        bucketName: 'images/uploads',
+        fileName: path,
+        contentType: isPhoto ? 'image/jpeg' : 'video/mp4',
+      );
+      if (url == null) return false;
+
+      await supabase.from('place_media').insert({
+        'place_id': placeId,
+        'media_url': url,
+        'is_photo': isPhoto,
+      });
+      return true;
+    } catch (e) {
+      print("❌ addPlaceMedia error: $e");
+      return false;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchPlaceMedia(int placeId) async {
+    try {
+      final rows = await supabase
+          .from('place_media')
+          .select('id, media_url, is_photo, created_at, caption')
+          .eq('place_id', placeId)
+          .order('created_at', ascending: false)
+          .limit(30);
+      return List<Map<String, dynamic>>.from(rows);
+    } catch (e) {
+      print("❌ fetchPlaceMedia error: $e");
+      return [];
+    }
   }
 
   ////////////////////////////////////////////
